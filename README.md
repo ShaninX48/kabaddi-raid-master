@@ -1,4 +1,4 @@
-# 🏟️ Kabaddi: Raid Master
+#  Kabaddi: Raid Master
 
 A single-file, browser-based Kabaddi game — turn-based raid strategy, a real 3D court (Three.js), voice/mic-powered breath-holding, and authentic rules (Do-or-Die raids, Super Tackles, All-Out/Lona, Golden Raid tie-breaker).
 
@@ -6,7 +6,7 @@ No install, no build step — it's one `index.html` file.
 
 ---
 
-## ✨ Features
+##  Features
 
 - **Turn-based raid strategy** — pick Hand Touch, Toe Touch, Dodge & Dash, or Bonus Raid each turn and simulate the outcome against the AI defense.
 - **Real 3D court** — Three.js scene with an angled broadcast camera, textured mud court, grass surrounds, lighting/shadows, and human-shaped 3D player figures.
@@ -30,7 +30,7 @@ No install, no build step — it's one `index.html` file.
 3. Score touch/bonus points, avoid getting tackled, and watch for **Do-or-Die** and **Golden Raid** moments.
 4. First to the highest score after 2 halves (or the Golden Raid sudden-death) wins.
 
-## 🚀 Running It
+##  Running It
 
 **Locally:** just double-click `index.html` and it opens in your browser.
 > Note: the mic (voice chanting) feature needs a secure context (HTTPS or `localhost`) to work — opening the file directly (`file://`) will block mic permission on most browsers. The tap button always works as a fallback.
@@ -41,25 +41,18 @@ No install, no build step — it's one `index.html` file.
 3. Import this repo → Framework Preset: "Other" → Deploy.
 4. You'll get a free HTTPS link (e.g. `your-project.vercel.app`) — mic/voice chanting works properly there.
 
-## 🛠️ Tech
+##  Tech
 
 Plain HTML/CSS/JS — no build tools, no npm install. Uses:
 - [Three.js](https://threejs.org/) (r128, via CDN) for the 3D court and player figures
 - Web Audio API for synthesized sound effects (no audio files)
 - Web `getUserMedia` + `AnalyserNode` for mic/voice-volume detection
 
-## 👥 Contributors
+##  Contributors
 
 - **MD Tanveer Mahmood Shanin**
 - **Sawda Akter**
 - **Joydev Datta**
-
-## 👥 Contributors
-
-This project was built by:
-- MD Tanveer Mahmood Shanin
-- Sawda Akter
-- Joydev Datta
 
 ## 📄 License
 
