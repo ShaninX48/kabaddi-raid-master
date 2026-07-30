@@ -1,0 +1,2015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kabaddi: Raid Master</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Roboto+Slab:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --mud: #ab7649;
+    --mud-dark: #8a5c37;
+    --mud-light: #c08e5e;
+    --grass: #2f5d34;
+    --grass-dark: #234727;
+    --lime: #f4ecdd;
+    --tigers: #006a4e;
+    --tigers-accent: #f42a41;
+    --panthers: #24304d;
+    --panthers-accent: #d9a441;
+    --paper: #f1e6d0;
+    --paper-dark: #e4d4b4;
+    --ink: #2b2015;
+    --ink-soft: #5a4a37;
+    --sun: #e8b23b;
+  }
+  *{box-sizing:border-box;}
+  html, body{ height:100%; }
+  body{
+    margin:0;
+    height:100dvh;
+    height:100vh;
+    overflow-y:auto;
+    background: linear-gradient(180deg, #cfe6c9 0%, #a9c98f 40%, var(--grass) 100%);
+    font-family:'Roboto Slab', serif;
+    color: var(--ink);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding: 10px 10px 8px;
+  }
+
+  h1,h2,h3{font-family:'Anton', sans-serif; letter-spacing:0.5px; margin:0;}
+
+  /* ---------- Ticket scoreboard ---------- */
+  .ticket{
+    width:100%;
+    max-width:760px;
+    background: var(--paper);
+    border-radius: 10px;
+    box-shadow: 0 6px 0 var(--paper-dark), 0 10px 18px rgba(0,0,0,0.25);
+    padding: 10px 20px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    position:relative;
+    overflow:hidden;
+    flex-shrink: 0;
+  }
+  .ticket::before, .ticket::after{
+    content:"";
+    position:absolute;
+    top:50%; transform:translateY(-50%);
+    width:22px; height:22px;
+    background: linear-gradient(180deg, #cfe6c9, var(--grass));
+    border-radius:50%;
+  }
+  .ticket::before{ left:-11px; }
+  .ticket::after{ right:-11px; }
+  .team-block{ text-align:center; flex:1; min-width:0;}
+  .team-block .name{ font-size:1.05rem; line-height:1.1; }
+  .team-block.tigers .name{ color: var(--tigers); }
+  .team-block.panthers .name{ color: var(--panthers); }
+  .team-block .sub{ font-size:0.68rem; color:var(--ink-soft); text-transform:uppercase; letter-spacing:1px;}
+  .score-mid{ text-align:center; flex-shrink:0; }
+  .score-digits{
+    font-family:'Space Mono', monospace;
+    font-weight:700;
+    font-size:2.1rem;
+    letter-spacing:2px;
+  }
+  .half-label{ font-size:0.65rem; text-transform:uppercase; letter-spacing:1.5px; color:var(--ink-soft); }
+
+  /* ---------- Field & court ---------- */
+  .field{
+    width:100%;
+    max-width:760px;
+    margin-top:10px;
+    background: radial-gradient(ellipse at 50% 0%, #bcdba0, var(--grass) 70%);
+    border-radius: 22px;
+    padding: 12px 14px;
+    position:relative;
+    box-shadow: inset 0 0 40px rgba(0,0,0,0.18), 0 10px 22px rgba(0,0,0,0.25);
+    flex-shrink: 1;
+    min-height: 0;
+  }
+  .field::before{
+    content:"🌴";
+    position:absolute; top:6px; left:14px; font-size:1.6rem; opacity:0.85;
+    filter: drop-shadow(0 3px 2px rgba(0,0,0,0.25));
+  }
+  .field::after{
+    content:"☀️";
+    position:absolute; top:2px; right:18px; font-size:1.8rem;
+  }
+
+  .court{
+    position:relative;
+    background: var(--grass-dark);
+    border-radius: 20px;
+    height: clamp(160px, 32vh, 340px);
+    box-shadow: 0 0 0 6px var(--grass-dark), inset 0 0 30px rgba(0,0,0,0.25);
+    overflow:hidden;
+  }
+  .court canvas{
+    display:block !important;
+    width:100% !important;
+    height:100% !important;
+    position:absolute;
+    inset:0;
+    z-index:1;
+  }
+  .half{
+    position:absolute; left:0; right:0; height:50%;
+    display:flex; align-items:center; justify-content:center;
+    padding: 6px 22px;
+  }
+  .half.panthers-half{ top:0; }
+  .half.tigers-half{ bottom:0; }
+  .row-tokens{
+    display:flex; justify-content:center; gap: 8px; flex-wrap:wrap;
+    max-width: 90%;
+  }
+  .mid-line{
+    position:absolute; left:6%; right:6%; top:50%; height:2px;
+    background: var(--lime); opacity:0.85;
+    box-shadow: 0 0 4px rgba(0,0,0,0.3);
+  }
+  .bonus-line{
+    position:absolute; left:10%; right:10%; height:1.5px;
+    background: repeating-linear-gradient(90deg, var(--lime) 0 8px, transparent 8px 14px);
+    opacity:0.8;
+  }
+  .bonus-line.top{ top: 24%; }
+  .bonus-line.bottom{ top: 76%; }
+
+  .token{
+    width: 30px; height:30px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Space Mono', monospace; font-size:0.62rem; font-weight:700;
+    color:#fff; border: 2px solid rgba(255,255,255,0.6);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.35);
+    transition: opacity 0.4s, transform 0.4s;
+  }
+  .token.panthers{ background: var(--panthers); }
+  .token.tigers{ background: var(--tigers); }
+  .token.out{ opacity:0; transform: scale(0.3); pointer-events:none; }
+
+  .raider-token{
+    position:absolute;
+    width:34px; height:34px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    left:50%; transform: translate(-50%, 0);
+    top: 82%;
+    transition: top 0.9s cubic-bezier(.45,.05,.55,.95);
+    filter: drop-shadow(0 3px 3px rgba(0,0,0,0.4));
+    z-index:5;
+    border: 2px solid rgba(255,255,255,0.7);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.35);
+  }
+  .raider-token.tigers{ background: var(--tigers); }
+  .raider-token.panthers{ background: var(--panthers); }
+  .raider-token.hidden{ display:none; }
+
+  .benches{
+    display:flex; justify-content:space-between; margin-top:8px; gap:10px;
+  }
+  .bench{
+    flex:1;
+    background: rgba(255,255,255,0.15);
+    border-radius: 10px;
+    padding: 5px 8px;
+    min-height: 32px;
+    display:flex; align-items:center; gap:6px; flex-wrap:wrap;
+  }
+  .bench .label{
+    font-size:0.6rem; text-transform:uppercase; letter-spacing:1px;
+    color: #eef4ea; opacity:0.85; margin-right:4px; font-family:'Roboto Slab';
+  }
+
+  /* ---------- Raid panel ---------- */
+  .raid-panel{
+    width:100%; max-width:760px; margin-top:10px;
+    background: var(--paper);
+    border-radius: 14px;
+    padding: 12px 16px;
+    box-shadow: 0 6px 0 var(--paper-dark), 0 10px 18px rgba(0,0,0,0.22);
+    flex-shrink: 0;
+  }
+  .raid-header{
+    display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;
+  }
+  .raid-header h3{ font-size:0.95rem; }
+  .breath-wrap{
+    background: rgba(0,0,0,0.12);
+    border-radius: 6px;
+    height: 9px;
+    overflow:hidden;
+    margin-bottom: 10px;
+  }
+  .breath-bar{
+    height:100%;
+    width:0%;
+    background: linear-gradient(90deg, var(--sun), var(--tigers-accent));
+    transition: width 1s linear;
+  }
+  .moves{
+    display:grid; grid-template-columns: repeat(2, 1fr); gap:8px;
+  }
+  @media (max-width:480px){ .moves{ grid-template-columns: 1fr; } }
+  .move-btn{
+    text-align:left;
+    border:none; border-radius:10px;
+    padding: 10px 12px;
+    background: #fff;
+    border: 2px solid var(--paper-dark);
+    cursor:pointer;
+    font-family:'Roboto Slab';
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .move-btn:hover:not(:disabled){ transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.18); }
+  .move-btn:disabled{ opacity:0.45; cursor:not-allowed; }
+  .move-btn .m-name{ font-weight:700; display:block; font-size:0.92rem; }
+  .move-btn .m-desc{ font-size:0.72rem; color:var(--ink-soft); }
+  .move-btn .m-odds{ font-family:'Space Mono'; font-size:0.68rem; color:var(--ink-soft); float:right; }
+
+  .next-btn{
+    width:100%; margin-top:12px;
+    padding: 12px; border:none; border-radius:10px;
+    background: var(--tigers); color:#fff;
+    font-family:'Anton'; letter-spacing:1px; font-size:1rem;
+    cursor:pointer;
+  }
+  .next-btn:hover{ filter:brightness(1.08); }
+
+  /* ---------- Log ---------- */
+  .log-panel{
+    width:100%; max-width:760px; margin-top:18px;
+    background: #1d2a1f;
+    border-radius: 12px;
+    padding: 12px 16px;
+    max-height: 180px;
+    overflow-y:auto;
+    font-family:'Space Mono', monospace;
+    font-size:0.76rem;
+    color: #d8e8d0;
+  }
+  .log-panel .entry{ padding: 3px 0; border-bottom: 1px dashed rgba(255,255,255,0.08); }
+  .log-panel .entry:last-child{ border-bottom:none; }
+  .log-panel .tag-score{ color: var(--sun); font-weight:700; }
+
+  /* ---------- Stats ---------- */
+  .stats-panel{
+    width:100%; max-width:760px; margin-top:14px;
+    display:grid; grid-template-columns: 1fr 1fr; gap:12px;
+  }
+  .stat-card{
+    background: var(--paper); border-radius:10px; padding:10px 14px;
+    box-shadow: 0 4px 0 var(--paper-dark);
+  }
+  .stat-card h4{ font-size:0.8rem; margin:0 0 6px; text-transform:uppercase; letter-spacing:1px; }
+  .stat-card.tigers h4{ color:var(--tigers); }
+  .stat-card.panthers h4{ color:var(--panthers); }
+  .stat-row{ display:flex; justify-content:space-between; font-size:0.78rem; font-family:'Space Mono'; }
+
+  /* ---------- Modal ---------- */
+  .modal-overlay{
+    position:fixed; inset:0; background: rgba(20,20,10,0.65);
+    display:none; align-items:center; justify-content:center; z-index:50; padding:16px;
+  }
+  .modal-overlay.show{ display:flex; }
+  .modal{
+    background: var(--paper); border-radius:16px; padding: 26px 24px;
+    max-width: 420px; width:100%; text-align:center;
+    box-shadow: 0 14px 30px rgba(0,0,0,0.4);
+  }
+  .modal h2{ font-size:1.6rem; margin-bottom:6px; }
+  .modal p{ margin: 4px 0; font-size:0.9rem; }
+  .modal .final-score{ font-family:'Space Mono'; font-size:2rem; font-weight:700; margin: 10px 0; }
+  .modal button{
+    margin-top:16px; padding:10px 22px; border:none; border-radius:8px;
+    background: var(--tigers); color:#fff; font-family:'Anton'; letter-spacing:1px;
+    cursor:pointer; font-size:0.95rem;
+  }
+  .team-input-row{
+    display:flex; align-items:center; justify-content:center; gap:10px;
+    margin: 14px 0;
+  }
+  .team-input-row input{
+    flex:1; min-width:0;
+    padding: 10px 8px;
+    border-radius: 8px;
+    border: 2px solid var(--paper-dark);
+    background:#fff;
+    font-family:'Anton', sans-serif;
+    font-size:0.95rem;
+    letter-spacing:0.5px;
+    text-align:center;
+    color: var(--ink);
+  }
+  .team-input-row input:focus{ outline:none; border-color: var(--tigers); }
+  .team-input-row .vs-label{
+    font-family:'Anton', sans-serif;
+    font-size:1rem;
+    color: var(--ink-soft);
+    flex-shrink:0;
+  }
+
+  .hidden{ display:none !important; }
+
+  /* ---------- Chant challenge (floats beside/over the game, no scrolling needed) ---------- */
+  .chant-challenge{
+    text-align:center;
+    padding: 6px 0 10px;
+  }
+  .chant-challenge:not(.hidden){
+    position: fixed;
+    z-index: 200;
+    background: var(--paper);
+    border-radius: 18px;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.45);
+    padding: 16px 16px 14px;
+    animation: chantFloatIn 0.25s ease-out;
+  }
+  @media (min-width: 860px){
+    .chant-challenge:not(.hidden){
+      top: 50%;
+      right: max(14px, calc((100vw - 760px) / 2 - 260px));
+      transform: translateY(-50%);
+      width: 240px;
+    }
+  }
+  @media (max-width: 859px){
+    .chant-challenge:not(.hidden){
+      left: 50%;
+      bottom: 14px;
+      transform: translateX(-50%);
+      width: min(92vw, 360px);
+    }
+  }
+  @keyframes chantFloatIn{
+    from{ opacity:0; transform: translateY(-50%) scale(0.9); }
+    to{ opacity:1; transform: translateY(-50%) scale(1); }
+  }
+  @media (max-width: 859px){
+    @keyframes chantFloatIn{
+      from{ opacity:0; transform: translateX(-50%) translateY(10px); }
+      to{ opacity:1; transform: translateX(-50%) translateY(0); }
+    }
+  }
+  .mini-breath-wrap{
+    background: rgba(0,0,0,0.12);
+    border-radius: 6px;
+    height: 8px;
+    overflow:hidden;
+    margin-bottom: 10px;
+  }
+  .mini-breath-bar{
+    height:100%;
+    width:0%;
+    background: linear-gradient(90deg, var(--sun), var(--tigers-accent));
+  }
+  .chant-text{
+    font-family:'Anton', sans-serif;
+    font-size:1.4rem;
+    letter-spacing:1px;
+    color: var(--tigers-accent);
+    margin-bottom:10px;
+  }
+  .chant-text.pulse{
+    animation: chantPulse 0.35s ease-out;
+  }
+  @keyframes chantPulse{
+    0%{ transform: scale(1.25); color: var(--sun); }
+    100%{ transform: scale(1); color: var(--tigers-accent); }
+  }
+  .chant-btn{
+    padding: 16px 30px;
+    font-family:'Anton', sans-serif;
+    font-size:1.15rem;
+    letter-spacing:1px;
+    border:none; border-radius: 50px;
+    background: linear-gradient(180deg, var(--tigers-accent), #b81f33);
+    color:#fff;
+    cursor:pointer;
+    box-shadow: 0 4px 0 #7d1522, 0 8px 14px rgba(0,0,0,0.3);
+    user-select:none;
+    touch-action: manipulation;
+    width:100%;
+  }
+  .chant-btn:active{
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 #7d1522, 0 3px 6px rgba(0,0,0,0.3);
+  }
+  .chant-hint{
+    margin-top:8px; font-size:0.7rem; color:var(--ink-soft); text-transform:uppercase; letter-spacing:1px;
+  }
+  .mic-row{
+    margin-top:12px; display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap;
+  }
+  .mic-toggle{
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: 2px solid var(--tigers);
+    background: #fff;
+    color: var(--tigers);
+    font-family:'Roboto Slab';
+    font-weight:700;
+    font-size:0.78rem;
+    cursor:pointer;
+  }
+  .mic-toggle:disabled{ opacity:0.5; cursor:not-allowed; }
+  .mic-toggle.active{
+    background: var(--tigers); color:#fff;
+  }
+  .mic-toggle.active::before{
+    content:'●'; margin-right:6px; color:#7CFC9A;
+    animation: micPulse 1.1s infinite;
+  }
+  @keyframes micPulse{
+    0%,100%{ opacity:1; } 50%{ opacity:0.25; }
+  }
+  .mic-status{
+    font-size:0.68rem; color:var(--ink-soft); font-family:'Space Mono';
+  }
+
+  /* ---------- Juice: sound toggle, confetti, shake, bumps ---------- */
+  .mute-btn{
+    position:absolute; top:8px; left:14px;
+    width:30px; height:30px; border-radius:50%;
+    border: none; background: rgba(0,0,0,0.08);
+    font-size:0.95rem; cursor:pointer; line-height:1;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .restart-btn{
+    position:absolute; top:8px; left:50px;
+    width:30px; height:30px; border-radius:50%;
+    border: none; background: rgba(0,0,0,0.08);
+    font-size:0.95rem; cursor:pointer; line-height:1;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .info-btn{
+    position:absolute; top:8px; right:14px;
+    width:30px; height:30px; border-radius:50%;
+    border: none; background: rgba(0,0,0,0.08);
+    font-size:0.95rem; cursor:pointer; line-height:1;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .restart-btn:hover, .mute-btn:hover, .info-btn:hover{ background: rgba(0,0,0,0.16); }
+  .ticket{ position:relative; }
+
+  .info-modal{ text-align:left; max-height:80vh; overflow-y:auto; max-width:540px; }
+  .info-modal h2{ text-align:center; }
+  .info-modal .log-panel{ max-height:160px; margin-bottom:14px; margin-top:0; }
+  .info-modal .stats-panel{ margin-top:0; }
+  .info-modal button{ display:block; margin:16px auto 0; }
+
+  .score-digits.bump{ animation: scoreBump 0.5s ease-out; }
+  @keyframes scoreBump{
+    0%{ transform:scale(1); }
+    30%{ transform:scale(1.35); color: var(--sun); }
+    100%{ transform:scale(1); }
+  }
+
+  .field{ position:relative; }
+  .confetti-layer{
+    position:absolute; inset:0; pointer-events:none; overflow:visible; z-index:20;
+  }
+  .confetti-piece{
+    position:absolute; top:45%; left:50%;
+    width:8px; height:8px; border-radius:2px;
+    opacity:0.95;
+    animation: confettiBurst 0.9s ease-out forwards;
+  }
+  @keyframes confettiBurst{
+    0%{ transform: translate(-50%,-50%) rotate(0deg); opacity:1; }
+    100%{ transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) rotate(var(--rot)); opacity:0; }
+  }
+
+  .court.shake{ animation: courtShake 0.35s ease-in-out; }
+  @keyframes courtShake{
+    0%,100%{ transform: translateX(0); }
+    20%{ transform: translateX(-6px); }
+    40%{ transform: translateX(6px); }
+    60%{ transform: translateX(-4px); }
+    80%{ transform: translateX(4px); }
+  }
+
+  .court-flash{
+    position:absolute; inset:0; border-radius: 20px;
+    background: var(--sun); opacity:0; pointer-events:none;
+    z-index:15;
+  }
+  .court-flash.go{ animation: flashPop 0.6s ease-out; }
+  @keyframes flashPop{
+    0%{ opacity:0.75; } 100%{ opacity:0; }
+  }
+
+  .raid-panel.do-or-die{
+    animation: warningPulse 0.9s ease-in-out infinite;
+  }
+  @keyframes warningPulse{
+    0%,100%{ box-shadow: 0 6px 0 var(--paper-dark), 0 10px 18px rgba(0,0,0,0.22); }
+    50%{ box-shadow: 0 6px 0 var(--paper-dark), 0 0 0 4px rgba(244,42,65,0.55), 0 10px 18px rgba(0,0,0,0.22); }
+  }
+  .ticket.golden{
+    animation: goldenPulse 1s ease-in-out infinite;
+  }
+  @keyframes goldenPulse{
+    0%,100%{ box-shadow: 0 6px 0 var(--paper-dark), 0 10px 18px rgba(0,0,0,0.25); }
+    50%{ box-shadow: 0 6px 0 var(--paper-dark), 0 0 0 5px rgba(232,178,59,0.6), 0 10px 18px rgba(0,0,0,0.25); }
+  }
+</style>
+</head>
+<body>
+
+  <div class="modal-overlay show" id="startOverlay">
+    <div class="modal">
+      <h2>🏟️ Kabaddi: Raid Master</h2>
+      <p>Name your two teams, then chant "Kabaddi!" to hold your breath on every raid.</p>
+      <div class="team-input-row">
+        <input type="text" id="teamAInput" value="UITS" maxlength="22">
+        <span class="vs-label">✕</span>
+        <input type="text" id="teamBInput" value="KAIST" maxlength="22">
+      </div>
+      <p style="font-size:0.78rem; color:var(--ink-soft);">Starting the match will ask for mic permission so you can chant out loud. You can skip it and use the tap button instead.</p>
+      <button id="startMatchBtn">🚩 Start Match</button>
+    </div>
+  </div>
+
+  <div class="ticket" id="ticketBar">
+    <button class="mute-btn" id="muteBtn" type="button" title="Toggle sound">🔊</button>
+    <button class="restart-btn" id="restartBtn" type="button" title="Start a new game">🔄</button>
+    <button class="info-btn" id="infoBtn" type="button" title="Match log & stats">📊</button>
+    <div class="team-block tigers">
+      <div class="name" id="teamAName">Bangladesh Tigers</div>
+      <div class="sub" id="tigersOnCourt">7 on court</div>
+    </div>
+    <div class="score-mid">
+      <div class="half-label" id="halfLabel">Half 1 · Raid 1</div>
+      <div class="score-digits" id="scoreDigits"><span id="scoreTigers">0</span> : <span id="scorePanthers">0</span></div>
+    </div>
+    <div class="team-block panthers">
+      <div class="name" id="teamBName">Rajshahi Panthers</div>
+      <div class="sub" id="panthersOnCourt">7 on court</div>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="confetti-layer" id="confettiLayer"></div>
+    <div class="court" id="court">
+      <div class="court-flash" id="courtFlash"></div>
+    </div>
+    <div class="benches">
+      <div class="bench" id="tigersBench"><span class="label">Tigers bench</span></div>
+      <div class="bench" id="panthersBench"><span class="label">Panthers bench</span></div>
+    </div>
+  </div>
+
+  <div class="raid-panel" id="raidPanel">
+    <div class="raid-header">
+      <h3 id="raidTitle">Your Raid — choose a move</h3>
+      <span class="chant-hint" style="margin:0;">Cant (breath) meter</span>
+    </div>
+    <div class="breath-wrap"><div class="breath-bar" id="breathBar"></div></div>
+    <div class="chant-challenge hidden" id="chantChallenge">
+      <div class="mini-breath-wrap"><div class="mini-breath-bar" id="miniBreathBar"></div></div>
+      <div class="chant-text" id="chantText">Kabaddi... Kabaddi... Kabaddi...</div>
+      <button class="chant-btn" id="chantBtn" type="button">🗣️ Kabaddi!</button>
+      <div class="chant-hint">Tap to hold your breath — don't let the cant break!</div>
+      <div class="mic-row">
+        <button class="mic-toggle" id="micToggleBtn" type="button">🎤 Enable Mic</button>
+        <span class="mic-status" id="micStatus"></span>
+      </div>
+    </div>
+    <div class="moves" id="moves">
+      <button class="move-btn" data-move="hand">
+        <span class="m-odds" id="oddsHand"></span>
+        <span class="m-name">✋ Hand Touch</span>
+        <span class="m-desc">Safe single tag & retreat.</span>
+      </button>
+      <button class="move-btn" data-move="toe">
+        <span class="m-odds" id="oddsToe"></span>
+        <span class="m-name">👣 Toe Touch</span>
+        <span class="m-desc">Reach for two defenders — risky.</span>
+      </button>
+      <button class="move-btn" data-move="dodge">
+        <span class="m-odds" id="oddsDodge"></span>
+        <span class="m-name">💨 Dodge & Dash</span>
+        <span class="m-desc">Slip through the line, no touch.</span>
+      </button>
+      <button class="move-btn" data-move="bonus">
+        <span class="m-odds" id="oddsBonus"></span>
+        <span class="m-name">⭐ Bonus Raid</span>
+        <span class="m-desc">Cross the bonus line (needs full defense).</span>
+      </button>
+    </div>
+    <button class="next-btn hidden" id="nextBtn">Start Next Raid</button>
+  </div>
+
+  <div class="modal-overlay" id="infoOverlay">
+    <div class="modal info-modal">
+      <h2 style="margin-bottom:10px;">📊 Match Info</h2>
+      <div class="log-panel" id="log"></div>
+      <div class="stats-panel">
+        <div class="stat-card tigers">
+          <h4>Tigers stats</h4>
+          <div class="stat-row"><span>Raid pts</span><span id="tRaid">0</span></div>
+          <div class="stat-row"><span>Tackle pts</span><span id="tTackle">0</span></div>
+          <div class="stat-row"><span>Bonus pts</span><span id="tBonus">0</span></div>
+          <div class="stat-row"><span>All-outs</span><span id="tAllout">0</span></div>
+        </div>
+        <div class="stat-card panthers">
+          <h4>Panthers stats</h4>
+          <div class="stat-row"><span>Raid pts</span><span id="aRaid">0</span></div>
+          <div class="stat-row"><span>Tackle pts</span><span id="aTackle">0</span></div>
+          <div class="stat-row"><span>Bonus pts</span><span id="aBonus">0</span></div>
+          <div class="stat-row"><span>All-outs</span><span id="aAllout">0</span></div>
+        </div>
+      </div>
+      <button id="closeInfoBtn" type="button">Close</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="endOverlay">
+    <div class="modal">
+      <h2 id="endTitle">Full Time!</h2>
+      <div class="final-score" id="endScore">0 : 0</div>
+      <p id="endWinner"></p>
+      <p id="endMvp"></p>
+      <button id="playAgainBtn">Play Again</button>
+    </div>
+  </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+  const TIGER_NAMES = ['Rafiq','Karim','Sohel','Jashim','Nayeem','Habib','Farid'];
+  const PANTHER_NAMES = ['Milon','Shakil','Rezaul','Anis','Tarek','Babul','Imran'];
+  const RAIDS_PER_HALF_PER_TEAM = 6;
+
+  function makeTeam(name, players, raiderSkill, defenseStrength){
+    return {
+      name,
+      players: players.map(n=>({name:n, status:'in'})),
+      raiderSkill, defenseStrength,
+      score:{raid:0, tackle:0, bonus:0, allout:0},
+      outQueue: [],
+      emptyRaidStreak: 0
+    };
+  }
+
+  let state;
+  function freshState(nameA, nameB){
+    state = {
+      half:1,
+      pairCount:0,
+      turn:'player', // whose raid is next
+      resolving:false,
+      matchOver:false,
+      goldenRaid:false,
+      lastRaidScored:false,
+      teams:{
+        tigers: makeTeam(nameA || 'Bangladesh Tigers', TIGER_NAMES, 62, 58),
+        panthers: makeTeam(nameB || 'Rajshahi Panthers', PANTHER_NAMES, 55, 60)
+      },
+      log:[]
+    };
+  }
+  freshState();
+
+  const el = id => document.getElementById(id);
+  const tigersBenchEl = el('tigersBench');
+  const panthersBenchEl = el('panthersBench');
+  const logEl = el('log');
+  const movesEl = el('moves');
+  const nextBtn = el('nextBtn');
+  const breathBar = el('breathBar');
+  const micToggleBtn = el('micToggleBtn');
+  const micStatusEl = el('micStatus');
+
+  let activeTapFn = null; // set while a chant challenge is running; mic taps call this
+  let micEnabled = false;
+  let micStream = null;
+  let micAnalyser = null;
+  let micDataArray = null;
+  const MIC_SUPPORTED = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+
+  /* ================= Audio engine (synthesized, no external files) ================= */
+  const AudioCtor = window.AudioContext || window.webkitAudioContext;
+  let actx = null;
+  let muted = false;
+  let ambient = null;
+  const muteBtn = el('muteBtn');
+
+  function ensureAudio(){
+    if(!AudioCtor) return;
+    if(!actx) actx = new AudioCtor();
+    if(actx.state === 'suspended') actx.resume();
+    if(!muted && !ambient) startAmbient();
+  }
+
+  function tone(freq, dur, type, vol, delay){
+    if(muted || !actx) return;
+    const t0 = actx.currentTime + (delay||0);
+    const osc = actx.createOscillator();
+    const gain = actx.createGain();
+    osc.type = type || 'sine';
+    osc.frequency.setValueAtTime(freq, t0);
+    gain.gain.setValueAtTime(0, t0);
+    gain.gain.linearRampToValueAtTime(vol||0.15, t0+0.012);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+    osc.connect(gain).connect(actx.destination);
+    osc.start(t0);
+    osc.stop(t0+dur+0.03);
+  }
+
+  function noiseBurst(dur, vol){
+    if(muted || !actx) return;
+    const size = Math.max(1, Math.floor(actx.sampleRate * dur));
+    const buffer = actx.createBuffer(1, size, actx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for(let i=0;i<size;i++){ data[i] = (Math.random()*2-1) * (1 - i/size); }
+    const src = actx.createBufferSource();
+    src.buffer = buffer;
+    const gain = actx.createGain();
+    gain.gain.setValueAtTime(vol||0.2, actx.currentTime);
+    src.connect(gain).connect(actx.destination);
+    src.start();
+  }
+
+  function startAmbient(){
+    if(!actx || ambient) return;
+    const size = actx.sampleRate * 2;
+    const buffer = actx.createBuffer(1, size, actx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for(let i=0;i<size;i++){ data[i] = Math.random()*2-1; }
+    const src = actx.createBufferSource();
+    src.buffer = buffer; src.loop = true;
+    const filter = actx.createBiquadFilter();
+    filter.type = 'bandpass'; filter.frequency.value = 450; filter.Q.value = 0.5;
+    const gain = actx.createGain();
+    gain.gain.value = 0.018;
+    src.connect(filter).connect(gain).connect(actx.destination);
+    src.start();
+    ambient = {src, gain};
+  }
+
+  function stopAmbient(){
+    if(ambient){ try{ ambient.src.stop(); }catch(e){} ambient = null; }
+  }
+
+  const sfx = {
+    whistle(){ tone(1900,0.22,'sine',0.13); tone(2100,0.16,'sine',0.09,0.12); },
+    tap(){ tone(680 + Math.random()*90, 0.08, 'square', 0.05); },
+    touch(){ tone(880,0.12,'triangle',0.15); tone(1320,0.15,'triangle',0.12,0.08); },
+    tackle(){ noiseBurst(0.18,0.22); tone(120,0.22,'sawtooth',0.15); },
+    bonus(){ [660,880,1100].forEach((f,i)=> tone(f,0.14,'sine',0.13,i*0.09)); },
+    allout(){ [440,554,659,880].forEach((f,i)=> tone(f,0.22,'square',0.12,i*0.11)); noiseBurst(0.3,0.14); },
+    halftime(){ tone(500,0.3,'sine',0.12); tone(750,0.35,'sine',0.1,0.15); },
+    goldenSting(){ tone(220,0.4,'sawtooth',0.12); tone(330,0.4,'sawtooth',0.1,0.1); },
+    matchEnd(){ [523,659,784,1046].forEach((f,i)=> tone(f,0.3,'triangle',0.15,i*0.15)); },
+    cheer(big){
+      noiseBurst(big?0.9:0.45, big?0.22:0.13);
+      const shouts = big ? 7 : 3;
+      for(let i=0;i<shouts;i++){
+        tone(300+Math.random()*260, 0.28+Math.random()*0.15, 'sawtooth', 0.055, i*0.06);
+      }
+    }
+  };
+
+  function setMuted(next){
+    muted = next;
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+    if(muted) stopAmbient(); else { ensureAudio(); startAmbient(); }
+  }
+  muteBtn.addEventListener('click', ()=>{ ensureAudio(); setMuted(!muted); });
+
+  /* ================= Visual juice: confetti, shake, flash ================= */
+  const confettiLayer = el('confettiLayer');
+  const courtFlash = el('courtFlash');
+
+  function burstConfetti(colors, count){
+    const palette = colors || ['#e8b23b','#f42a41','#006a4e','#f4ecdd'];
+    for(let i=0;i<(count||18);i++){
+      const p = document.createElement('div');
+      p.className = 'confetti-piece';
+      const angle = Math.random()*Math.PI*2;
+      const dist = 60 + Math.random()*90;
+      p.style.setProperty('--dx', Math.cos(angle)*dist + 'px');
+      p.style.setProperty('--dy', Math.sin(angle)*dist + 'px');
+      p.style.setProperty('--rot', (Math.random()*360-180) + 'deg');
+      p.style.background = palette[Math.floor(Math.random()*palette.length)];
+      p.style.top = (40 + Math.random()*20) + '%';
+      p.style.left = (40 + Math.random()*20) + '%';
+      confettiLayer.appendChild(p);
+      setTimeout(()=> p.remove(), 950);
+    }
+  }
+
+  function triggerShake(){
+    const courtEl = el('court');
+    courtEl.classList.remove('shake');
+    void courtEl.offsetWidth;
+    courtEl.classList.add('shake');
+    setTimeout(()=> courtEl.classList.remove('shake'), 400);
+  }
+
+  function triggerFlash(){
+    courtFlash.classList.remove('go');
+    void courtFlash.offsetWidth;
+    courtFlash.classList.add('go');
+  }
+
+  // Briefly glows the touched defender mesh(es) at the exact moment the raider makes contact
+  function flashTouch(meshes){
+    if(!meshes || !meshes.length) return;
+    meshes.forEach(mesh=>{
+      const mat = mesh && mesh.userData && mesh.userData.bodyMat;
+      if(!mat || !mat.emissive) return;
+      mat.emissive.setHex(0xffe08a);
+      mat.emissiveIntensity = 1;
+      tweenNumber(1, 0, 450, v=>{ mat.emissiveIntensity = v; });
+    });
+  }
+
+  // Defenders raise their arms into a "ready to grab" brace while a raider approaches them
+  function braceDefenders(meshes, engage){
+    (meshes||[]).forEach(m=>{
+      const ud = m && m.userData;
+      if(!ud || !ud.armL || !ud.armR) return;
+      const target = engage ? -0.9 : 0;
+      tweenNumber(ud.armL.rotation.x, target, 220, v=> ud.armL.rotation.x = v);
+      tweenNumber(ud.armR.rotation.x, target, 220, v=> ud.armR.rotation.x = v);
+    });
+  }
+
+  // Defenders lunge toward the raider and spring back empty-handed (a near-miss, no state change)
+  function swipeMissDefenders(meshes, raiderPos){
+    (meshes||[]).forEach(m=>{
+      const x = m.position.x, z = m.position.z;
+      const dx = (raiderPos.x - x) * 0.25;
+      const dz = (raiderPos.z - z) * 0.25;
+      tweenNumber(0, 1, 150, v=>{ m.position.x = x + dx*v; m.position.z = z + dz*v; }, ()=>{
+        tweenNumber(1, 0, 220, v=>{ m.position.x = x + dx*v; m.position.z = z + dz*v; });
+      });
+    });
+  }
+
+  // Crowd reacts to a point/big moment: jump + arms up, with a cheer sound. big=true for huge moments.
+  function cheerCrowd(big){
+    sfx.cheer(big);
+    const chance = big ? 0.9 : 0.5;
+    spectatorMeshes.forEach(s=>{
+      if(Math.random() > chance) return;
+      const ud = s.userData;
+      const jumpHeight = 0.12 + Math.random()*0.08;
+      const delay = Math.random()*160;
+      setTimeout(()=>{
+        tweenNumber(0, jumpHeight, 180, v=> s.position.y = v, ()=>{
+          tweenNumber(jumpHeight, 0, 220, v=> s.position.y = v);
+        });
+        if(ud.armL) tweenNumber(0.12, 2.6, 180, v=> ud.armL.rotation.z = v, ()=>{
+          tweenNumber(2.6, 0.12, 260, v=> ud.armL.rotation.z = v);
+        });
+        if(ud.armR) tweenNumber(-0.12, -2.6, 180, v=> ud.armR.rotation.z = v, ()=>{
+          tweenNumber(-2.6, -0.12, 260, v=> ud.armR.rotation.z = v);
+        });
+      }, delay);
+    });
+  }
+
+  if(!MIC_SUPPORTED){
+    micToggleBtn.disabled = true;
+    micToggleBtn.textContent = '🎤 Mic not supported here';
+    micStatusEl.textContent = 'Use the tap button instead.';
+  } else {
+    micToggleBtn.addEventListener('click', toggleMic);
+  }
+
+  function enableMic(){
+    if(!MIC_SUPPORTED || micEnabled) return Promise.resolve(false);
+    if(!window.isSecureContext){
+      micStatusEl.textContent = '⚠️ Mic needs HTTPS (or localhost) — opening this file directly blocks it on most browsers. Tap button still works fine.';
+      return Promise.resolve(false);
+    }
+    micStatusEl.textContent = 'Requesting mic permission...';
+    return navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){
+      micStream = stream;
+      const sourceNode = actx.createMediaStreamSource(stream);
+      micAnalyser = actx.createAnalyser();
+      micAnalyser.fftSize = 512;
+      micDataArray = new Uint8Array(micAnalyser.fftSize);
+      sourceNode.connect(micAnalyser);
+      micEnabled = true;
+      micToggleBtn.classList.add('active');
+      micToggleBtn.textContent = '🎤 Mic On';
+      micStatusEl.textContent = 'Chant or shout "Kabaddi!" loudly during your raid.';
+      return true;
+    }).catch(function(err){
+      micStatusEl.textContent = 'Mic permission denied/unavailable — use the tap button.';
+      micEnabled = false;
+      micToggleBtn.classList.remove('active');
+      micToggleBtn.textContent = '🎤 Enable Mic';
+      return false;
+    });
+  }
+
+  function disableMic(){
+    micEnabled = false;
+    micToggleBtn.classList.remove('active');
+    micToggleBtn.textContent = '🎤 Enable Mic';
+    micStatusEl.textContent = '';
+    if(micStream){ micStream.getTracks().forEach(function(t){ t.stop(); }); micStream = null; }
+    micAnalyser = null;
+  }
+
+  function toggleMic(){
+    ensureAudio();
+    if(!micEnabled){ enableMic(); } else { disableMic(); }
+  }
+
+  // Returns a 0..1-ish loudness level from the live mic signal (RMS of the waveform)
+  function getMicLevel(){
+    if(!micAnalyser || !micDataArray) return 0;
+    micAnalyser.getByteTimeDomainData(micDataArray);
+    let sumSquares = 0;
+    for(let i=0;i<micDataArray.length;i++){
+      const v = (micDataArray[i]-128)/128;
+      sumSquares += v*v;
+    }
+    return Math.sqrt(sumSquares/micDataArray.length);
+  }
+
+  function onCourtCount(team){ return team.players.filter(p=>p.status==='in').length; }
+
+  // Small action-pose stick figure used for player tokens and the raider token
+  function figureSVG(size){
+    const s = size || 16;
+    return '<svg viewBox="0 0 24 24" width="'+s+'" height="'+s+'" style="pointer-events:none;">' +
+      '<circle cx="12" cy="5.2" r="2.5" fill="#fff"/>' +
+      '<path d="M12 8 L12 14.5 M12 9.5 L6.5 12.5 M12 9.5 L18 8.2 M12 14.5 L7 21 M12 14.5 L17.5 20.5" ' +
+      'stroke="#fff" stroke-width="2.1" stroke-linecap="round" fill="none"/>' +
+      '</svg>';
+  }
+
+  /* ================= 3D scene (Three.js) ================= */
+  const TIGERS_HEX = 0x006a4e;
+  const PANTHERS_HEX = 0x24304d;
+  const TIGERS_BAULK_Z = 5.2, PANTHERS_BAULK_Z = -5.2;
+  const TIGERS_DEEP_Z = 3.4, PANTHERS_DEEP_Z = -3.4;
+  const CHANT_ADVANCE_MIN_Z = -3.0; // chanting alone can carry the raider across the mid-line, deep into enemy territory
+
+  let scene3d, camera3d, renderer3d;
+  let tigersMeshes = [], panthersMeshes = [], raiderMesh3d = null;
+  let spectatorMeshes = [];
+
+  function createCourtTexture(){
+    const w = 1024, h = 512;
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    const grad = ctx.createLinearGradient(0,0,0,h);
+    grad.addColorStop(0,'#c08e5e'); grad.addColorStop(0.5,'#ab7649'); grad.addColorStop(1,'#8a5c37');
+    ctx.fillStyle = grad; ctx.fillRect(0,0,w,h);
+
+    // broad dirt/wear blotches
+    for(let i=0;i<45;i++){
+      ctx.fillStyle = 'rgba(0,0,0,'+(0.03+Math.random()*0.05)+')';
+      ctx.beginPath();
+      ctx.ellipse(Math.random()*w, Math.random()*h, 30+Math.random()*60, 15+Math.random()*30, 0, 0, Math.PI*2);
+      ctx.fill();
+    }
+    // lighter dry patches
+    for(let i=0;i<20;i++){
+      ctx.fillStyle = 'rgba(255,235,190,'+(0.03+Math.random()*0.05)+')';
+      ctx.beginPath();
+      ctx.ellipse(Math.random()*w, Math.random()*h, 20+Math.random()*45, 12+Math.random()*22, 0, 0, Math.PI*2);
+      ctx.fill();
+    }
+    // scattered footprint / scuff marks (small dark ellipses in loose clusters)
+    for(let cluster=0; cluster<26; cluster++){
+      const cx = Math.random()*w, cy = Math.random()*h;
+      const n = 2 + Math.floor(Math.random()*3);
+      for(let i=0;i<n;i++){
+        ctx.fillStyle = 'rgba(0,0,0,'+(0.05+Math.random()*0.06)+')';
+        ctx.save();
+        ctx.translate(cx + (Math.random()-0.5)*40, cy + (Math.random()-0.5)*40);
+        ctx.rotate(Math.random()*Math.PI);
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 5+Math.random()*4, 9+Math.random()*5, 0, 0, Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+    // fine grain speckle for texture
+    for(let i=0;i<900;i++){
+      ctx.fillStyle = 'rgba('+ (Math.random()>0.5?'0,0,0,':'255,255,255,') + (0.02+Math.random()*0.03)+')';
+      ctx.fillRect(Math.random()*w, Math.random()*h, 1.5, 1.5);
+    }
+
+    ctx.strokeStyle = '#f4ecdd';
+    ctx.lineWidth = 6;
+    ctx.beginPath(); ctx.moveTo(40,h/2); ctx.lineTo(w-40,h/2); ctx.stroke();
+    ctx.setLineDash([16,12]); ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(60,h*0.27); ctx.lineTo(w-60,h*0.27); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(60,h*0.73); ctx.lineTo(w-60,h*0.73); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.lineWidth = 7;
+    ctx.strokeRect(18,18,w-36,h-36);
+
+    // soft vignette so the edges read as slightly worn/shaded
+    const vignette = ctx.createRadialGradient(w/2,h/2, h*0.25, w/2,h/2, h*0.85);
+    vignette.addColorStop(0, 'rgba(0,0,0,0)');
+    vignette.addColorStop(1, 'rgba(0,0,0,0.16)');
+    ctx.fillStyle = vignette;
+    ctx.fillRect(0,0,w,h);
+
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.anisotropy = 4;
+    return tex;
+  }
+
+  function createGrassTexture(){
+    const w = 512, h = 512;
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    const grad = ctx.createLinearGradient(0,0,0,h);
+    grad.addColorStop(0,'#3a6d3f'); grad.addColorStop(1,'#264a2b');
+    ctx.fillStyle = grad; ctx.fillRect(0,0,w,h);
+    // mow-stripe bands
+    for(let i=0;i<10;i++){
+      ctx.fillStyle = i%2===0 ? 'rgba(255,255,255,0.035)' : 'rgba(0,0,0,0.035)';
+      ctx.fillRect(0, i*(h/10), w, h/10);
+    }
+    // blade-like speckle texture
+    for(let i=0;i<2200;i++){
+      const shade = Math.random();
+      ctx.strokeStyle = shade>0.5 ? 'rgba(90,150,80,0.25)' : 'rgba(20,50,25,0.25)';
+      ctx.lineWidth = 1;
+      const x = Math.random()*w, y = Math.random()*h;
+      const len = 3+Math.random()*5;
+      const ang = (Math.random()-0.5)*0.6 - Math.PI/2;
+      ctx.beginPath();
+      ctx.moveTo(x,y);
+      ctx.lineTo(x+Math.cos(ang)*len, y+Math.sin(ang)*len);
+      ctx.stroke();
+    }
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(6,4);
+    tex.anisotropy = 4;
+    return tex;
+  }
+
+  function createSkyTexture(){
+    const w = 512, h = 512;
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    const grad = ctx.createLinearGradient(0,0,0,h);
+    grad.addColorStop(0, '#bfe3ff');
+    grad.addColorStop(0.55, '#d9f0d0');
+    grad.addColorStop(1, '#eaf6df');
+    ctx.fillStyle = grad; ctx.fillRect(0,0,w,h);
+    // a few soft clouds
+    for(let i=0;i<6;i++){
+      const cx = Math.random()*w, cy = h*0.15 + Math.random()*h*0.3;
+      ctx.fillStyle = 'rgba(255,255,255,0.55)';
+      for(let j=0;j<4;j++){
+        ctx.beginPath();
+        ctx.ellipse(cx+j*22, cy, 30+Math.random()*10, 16+Math.random()*6, 0, 0, Math.PI*2);
+        ctx.fill();
+      }
+    }
+    return new THREE.CanvasTexture(canvas);
+  }
+
+  function createSpectator3d(colorHex){
+    const group = new THREE.Group();
+    const mat = new THREE.MeshStandardMaterial({color: colorHex, roughness:0.9});
+    const skinMat = new THREE.MeshStandardMaterial({color:0xdba57a, roughness:0.9});
+
+    // legs
+    const legGeo = new THREE.CylinderGeometry(0.06, 0.07, 0.34, 6);
+    const legL = new THREE.Mesh(legGeo, mat);
+    legL.position.set(-0.08, 0.17, 0);
+    group.add(legL);
+    const legR = new THREE.Mesh(legGeo, mat);
+    legR.position.set(0.08, 0.17, 0);
+    group.add(legR);
+
+    // torso
+    const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.16, 0.36, 8), mat);
+    torso.position.y = 0.52;
+    group.add(torso);
+
+    // arms (down at sides, resting)
+    const armGeo = new THREE.CylinderGeometry(0.04, 0.05, 0.3, 6);
+    const armL = new THREE.Mesh(armGeo, mat);
+    armL.position.set(-0.19, 0.5, 0);
+    armL.rotation.z = 0.12;
+    group.add(armL);
+    const armR = new THREE.Mesh(armGeo, mat);
+    armR.position.set(0.19, 0.5, 0);
+    armR.rotation.z = -0.12;
+    group.add(armR);
+
+    // head
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), skinMat);
+    head.position.y = 0.8;
+    group.add(head);
+
+    group.userData.armL = armL;
+    group.userData.armR = armR;
+    group.userData.cheerPhase = Math.random() * Math.PI * 2;
+    return group;
+  }
+
+  function createPlayerMesh3d(colorHex){
+    const group = new THREE.Group();
+    const bodyMat = new THREE.MeshStandardMaterial({color: colorHex, roughness:0.7});
+    const skinMat = new THREE.MeshStandardMaterial({color:0xf0c9a0, roughness:0.8});
+
+    // legs (slightly apart, athletic stance)
+    const legGeo = new THREE.CylinderGeometry(0.075, 0.09, 0.42, 10);
+    const legL = new THREE.Mesh(legGeo, bodyMat);
+    legL.position.set(-0.11, 0.21, 0);
+    legL.castShadow = true;
+    group.add(legL);
+    const legR = new THREE.Mesh(legGeo, bodyMat);
+    legR.position.set(0.11, 0.21, 0);
+    legR.castShadow = true;
+    group.add(legR);
+
+    // torso (tapered, wider at hips)
+    const torsoGeo = new THREE.CylinderGeometry(0.16, 0.2, 0.42, 12);
+    const torso = new THREE.Mesh(torsoGeo, bodyMat);
+    torso.position.y = 0.63;
+    torso.castShadow = true;
+    group.add(torso);
+
+    // arms (angled outward, ready-to-tag pose)
+    const armGeo = new THREE.CylinderGeometry(0.055, 0.07, 0.36, 8);
+    const armL = new THREE.Mesh(armGeo, bodyMat);
+    armL.position.set(-0.28, 0.66, 0);
+    armL.rotation.z = 0.5;
+    armL.castShadow = true;
+    group.add(armL);
+    const armR = new THREE.Mesh(armGeo, bodyMat);
+    armR.position.set(0.28, 0.66, 0);
+    armR.rotation.z = -0.5;
+    armR.castShadow = true;
+    group.add(armR);
+
+    // head
+    const headGeo = new THREE.SphereGeometry(0.15, 14, 14);
+    const head = new THREE.Mesh(headGeo, skinMat);
+    head.position.y = 1.0;
+    head.castShadow = true;
+    group.add(head);
+
+    group.userData.bodyMat = bodyMat;
+    group.userData.legL = legL;
+    group.userData.legR = legR;
+    group.userData.armL = armL;
+    group.userData.armR = armR;
+    return group;
+  }
+
+  function createRaiderMesh3d(){
+    const group = createPlayerMesh3d(TIGERS_HEX);
+    const ringGeo = new THREE.TorusGeometry(0.42, 0.04, 8, 28);
+    const ringMat = new THREE.MeshStandardMaterial({color:0xe8b23b, emissive:0xe8b23b, emissiveIntensity:0.55, roughness:0.4});
+    const ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.rotation.x = Math.PI/2;
+    ring.position.y = 0.02;
+    group.add(ring);
+    return group;
+  }
+
+  function tweenNumber(from, to, duration, onUpdate, onDone){
+    const t0 = performance.now();
+    function step(now){
+      const t = Math.min(1, (now-t0)/duration);
+      const eased = t<0.5 ? 2*t*t : -1+(4-2*t)*t;
+      onUpdate(from + (to-from)*eased);
+      if(t<1){ requestAnimationFrame(step); } else if(onDone){ onDone(); }
+    }
+    requestAnimationFrame(step);
+  }
+
+  function setPlayerMeshState3d(mesh, isIn){
+    if(!mesh) return;
+    if(isIn){
+      if(!mesh.visible){ mesh.visible = true; mesh.scale.set(0.001,0.001,0.001); }
+      tweenNumber(mesh.scale.x, 1, 260, v=> mesh.scale.set(v,v,v));
+    } else if(mesh.visible){
+      tweenNumber(mesh.scale.x, 0.001, 220, v=> mesh.scale.set(v,v,v), ()=>{ mesh.visible = false; });
+    }
+  }
+
+  function onScene3dResize(){
+    if(!renderer3d) return;
+    const container = el('court');
+    const w = container.clientWidth, h = container.clientHeight;
+    if(!w || !h) return;
+    camera3d.aspect = w/h;
+    camera3d.updateProjectionMatrix();
+    renderer3d.setSize(w, h);
+  }
+
+  function init3dScene(){
+    const container = el('court');
+    scene3d = new THREE.Scene();
+    const skyTex = createSkyTexture();
+    scene3d.background = skyTex;
+    scene3d.fog = new THREE.Fog(0xd9f0d0, 14, 30);
+
+    camera3d = new THREE.PerspectiveCamera(42, container.clientWidth/(container.clientHeight||1), 0.1, 100);
+    camera3d.position.set(0, 7.6, 9.6);
+    camera3d.lookAt(0, 0, 0.4);
+
+    renderer3d = new THREE.WebGLRenderer({antialias:true});
+    renderer3d.shadowMap.enabled = true;
+    renderer3d.setPixelRatio(Math.min(window.devicePixelRatio||1, 2));
+    container.appendChild(renderer3d.domElement);
+
+    const hemi = new THREE.HemisphereLight(0xfff2d0, 0x1c3a20, 0.95);
+    scene3d.add(hemi);
+    const sun = new THREE.DirectionalLight(0xffe9b0, 0.95);
+    sun.position.set(-6, 10, 5);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(1024,1024);
+    sun.shadow.camera.left = -8; sun.shadow.camera.right = 8;
+    sun.shadow.camera.top = 8; sun.shadow.camera.bottom = -8;
+    scene3d.add(sun);
+
+    const grassMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(34, 24),
+      new THREE.MeshStandardMaterial({map: createGrassTexture(), roughness:0.95})
+    );
+    grassMesh.rotation.x = -Math.PI/2;
+    grassMesh.position.y = -0.02;
+    grassMesh.receiveShadow = true;
+    scene3d.add(grassMesh);
+
+    const courtMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(7, 13),
+      new THREE.MeshStandardMaterial({map: createCourtTexture(), roughness:0.9})
+    );
+    courtMesh.rotation.x = -Math.PI/2;
+    courtMesh.receiveShadow = true;
+    scene3d.add(courtMesh);
+
+    // simple crowd silhouettes ringing the field for atmosphere
+    const crowdColors = [0x8a3b3b, 0x3b5a8a, 0xd9a441, 0x4a7a4a, 0x6a4a8a, 0xc06a3b];
+    const crowdRows = [
+      {z: 7.4, count: 15, xSpread: 6.4},
+      {z: -7.4, count: 15, xSpread: 6.4}
+    ];
+    crowdRows.forEach(row=>{
+      for(let i=0;i<row.count;i++){
+        const s = createSpectator3d(crowdColors[i % crowdColors.length]);
+        const x = (i/(row.count-1) - 0.5) * row.xSpread*2 + (Math.random()-0.5)*0.3;
+        s.position.set(x, 0, row.z + (Math.random()-0.5)*0.6);
+        s.rotation.y = Math.random()*0.4 - 0.2;
+        scene3d.add(s);
+        spectatorMeshes.push(s);
+      }
+    });
+    [-4.2, 4.2].forEach(xSide=>{
+      for(let i=0;i<10;i++){
+        const s = createSpectator3d(crowdColors[i % crowdColors.length]);
+        const z = (i/9 - 0.5) * 9;
+        s.position.set(xSide + (Math.random()-0.5)*0.3, 0, z);
+        s.rotation.y = Math.PI/2 * (xSide>0?-1:1) + (Math.random()-0.5)*0.4;
+        scene3d.add(s);
+        spectatorMeshes.push(s);
+      }
+    });
+
+    TIGER_NAMES.forEach((name,i)=>{
+      const m = createPlayerMesh3d(TIGERS_HEX);
+      m.position.set((i-3)*0.82, 0, 4.0);
+      scene3d.add(m);
+      tigersMeshes.push(m);
+    });
+    PANTHER_NAMES.forEach((name,i)=>{
+      const m = createPlayerMesh3d(PANTHERS_HEX);
+      m.position.set((i-3)*0.82, 0, -4.0);
+      scene3d.add(m);
+      panthersMeshes.push(m);
+    });
+
+    raiderMesh3d = createRaiderMesh3d();
+    raiderMesh3d.visible = false;
+    scene3d.add(raiderMesh3d);
+
+    window.addEventListener('resize', onScene3dResize);
+    onScene3dResize();
+    requestAnimationFrame(render3dLoop);
+  }
+
+  function render3dLoop(t){
+    requestAnimationFrame(render3dLoop);
+    const time = (t||0) * 0.001;
+    for(let i=0;i<tigersMeshes.length;i++){
+      const m = tigersMeshes[i];
+      if(m.visible) m.position.y = Math.sin(time*1.5 + i) * 0.02;
+    }
+    for(let i=0;i<panthersMeshes.length;i++){
+      const m = panthersMeshes[i];
+      if(m.visible) m.position.y = Math.sin(time*1.5 + i + 3) * 0.02;
+    }
+    if(raiderMesh3d && raiderMesh3d.visible && !raiderMesh3d.userData.tackled){
+      const ud = raiderMesh3d.userData;
+      const swing = Math.sin(time*11) * 0.55;
+      if(ud.legL) ud.legL.rotation.x = swing;
+      if(ud.legR) ud.legR.rotation.x = -swing;
+      if(ud.armL) ud.armL.rotation.x = -swing*0.6;
+      if(ud.armR) ud.armR.rotation.x = swing*0.6;
+      raiderMesh3d.position.y = Math.abs(Math.sin(time*11)) * 0.05;
+    }
+    renderer3d.render(scene3d, camera3d);
+  }
+
+  function renderTokens(){
+    state.teams.tigers.players.forEach((p,i)=> setPlayerMeshState3d(tigersMeshes[i], p.status==='in'));
+    state.teams.panthers.players.forEach((p,i)=> setPlayerMeshState3d(panthersMeshes[i], p.status==='in'));
+
+    [['tigers', tigersBenchEl], ['panthers', panthersBenchEl]].forEach(([key, benchEl])=>{
+      const team = state.teams[key];
+      benchEl.innerHTML = '<span class="label">'+ team.name +' bench</span>';
+      team.players.forEach(p=>{
+        if(p.status==='out'){
+          const t = document.createElement('div');
+          t.className = 'token ' + key;
+          t.innerHTML = figureSVG(16);
+          t.title = p.name;
+          benchEl.appendChild(t);
+        }
+      });
+    });
+    el('tigersOnCourt').textContent = onCourtCount(state.teams.tigers) + ' on court';
+    el('panthersOnCourt').textContent = onCourtCount(state.teams.panthers) + ' on court';
+  }
+
+  let prevScoreTotal = 0;
+  function renderScore(){
+    const newTotal = totalScore(state.teams.tigers) + totalScore(state.teams.panthers);
+    el('scoreTigers').textContent = totalScore(state.teams.tigers);
+    el('scorePanthers').textContent = totalScore(state.teams.panthers);
+    if(newTotal !== prevScoreTotal){
+      const digitsEl = el('scoreDigits');
+      digitsEl.classList.remove('bump');
+      void digitsEl.offsetWidth;
+      digitsEl.classList.add('bump');
+    }
+    prevScoreTotal = newTotal;
+    el('halfLabel').textContent = 'Half ' + state.half + ' · Raid ' + (state.pairCount+1) + '/' + RAIDS_PER_HALF_PER_TEAM;
+    el('tRaid').textContent = state.teams.tigers.score.raid;
+    el('tTackle').textContent = state.teams.tigers.score.tackle;
+    el('tBonus').textContent = state.teams.tigers.score.bonus;
+    el('tAllout').textContent = state.teams.tigers.score.allout;
+    el('aRaid').textContent = state.teams.panthers.score.raid;
+    el('aTackle').textContent = state.teams.panthers.score.tackle;
+    el('aBonus').textContent = state.teams.panthers.score.bonus;
+    el('aAllout').textContent = state.teams.panthers.score.allout;
+  }
+
+  function totalScore(team){
+    return team.score.raid + team.score.tackle + team.score.bonus + team.score.allout;
+  }
+
+  function log(msg, isScore){
+    const div = document.createElement('div');
+    div.className = 'entry';
+    div.innerHTML = isScore ? '<span class="tag-score">'+msg+'</span>' : msg;
+    logEl.appendChild(div);
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  function randomInPlayer(team){
+    const pool = team.players.filter(p=>p.status==='in');
+    if(pool.length===0) return null;
+    return pool[Math.floor(Math.random()*pool.length)];
+  }
+
+  // Pick players to be touched WITHOUT mutating status yet (so we can animate the raider toward them first)
+  function pickInPlayers(team, count){
+    const pool = team.players.filter(p=>p.status==='in');
+    const shuffled = pool.slice().sort(()=> Math.random()-0.5);
+    return shuffled.slice(0, count);
+  }
+
+  function pickVisibleMeshes(meshArr, count){
+    const pool = meshArr.filter(m=> m.visible);
+    const shuffled = pool.slice().sort(()=> Math.random()-0.5);
+    return shuffled.slice(0, count);
+  }
+
+  // Mark a specific, already-chosen set of players out (paired with pickInPlayers)
+  function applyOut(team, players){
+    players.forEach(p=>{ p.status='out'; team.outQueue.push(p.name); });
+    return players.map(p=>p.name);
+  }
+
+  function markOut(team, count){
+    const removed = [];
+    for(let i=0;i<count;i++){
+      const p = randomInPlayer(team);
+      if(!p) break;
+      p.status='out';
+      team.outQueue.push(p.name);
+      removed.push(p.name);
+    }
+    return removed;
+  }
+
+  function revive(team){
+    if(team.outQueue.length===0) return null;
+    const name = team.outQueue.shift();
+    const p = team.players.find(pl=>pl.name===name);
+    if(p) p.status='in';
+    return name;
+  }
+
+  function checkAllOut(defendingKey, raidingKey){
+    const defTeam = state.teams[defendingKey];
+    if(onCourtCount(defTeam)===0){
+      state.teams[raidingKey].score.allout += 2;
+      defTeam.players.forEach(p=>p.status='in');
+      defTeam.outQueue = [];
+      log('💥 ALL OUT! ' + state.teams[raidingKey].name + ' earn +2 Lona points. ' + defTeam.name + ' fully revived.', true);
+      sfx.allout();
+      triggerFlash();
+      burstConfetti(['#e8b23b','#ffffff','#f42a41'], 26);
+      cheerCrowd(true);
+    }
+  }
+
+  function moveOdds(move, raiderTeam, defTeam){
+    const base = {hand:65, toe:45, dodge:70, bonus:40}[move];
+    const effDef = defTeam.defenseStrength * (onCourtCount(defTeam)/7);
+    let chance = base + (raiderTeam.raiderSkill - effDef) * 0.6;
+    return Math.max(12, Math.min(90, Math.round(chance)));
+  }
+
+  function bonusEligible(defTeam){ return onCourtCount(defTeam) >= 6; }
+
+  function updateOddsDisplay(){
+    const raiderKey = state.turn === 'player' ? 'tigers' : 'panthers';
+    const defKey = state.turn === 'player' ? 'panthers' : 'tigers';
+    const raiderTeam = state.teams[raiderKey], defTeam = state.teams[defKey];
+    ['hand','toe','dodge','bonus'].forEach(m=>{
+      const idMap = {hand:'oddsHand', toe:'oddsToe', dodge:'oddsDodge', bonus:'oddsBonus'};
+      const oddsEl = el(idMap[m]);
+      if(m==='bonus' && !bonusEligible(defTeam)){
+        oddsEl.textContent = 'locked';
+      } else {
+        oddsEl.textContent = moveOdds(m, raiderTeam, defTeam) + '%';
+      }
+    });
+    const bonusBtn = movesEl.querySelector('[data-move="bonus"]');
+    bonusBtn.disabled = !bonusEligible(defTeam);
+  }
+
+  function setButtonsEnabled(enabled){
+    movesEl.querySelectorAll('.move-btn').forEach(b=>{
+      if(b.dataset.move==='bonus'){
+        const defKey = state.turn === 'player' ? 'panthers' : 'tigers';
+        b.disabled = !enabled || !bonusEligible(state.teams[defKey]);
+      } else {
+        b.disabled = !enabled;
+      }
+    });
+  }
+
+  function animateRaider(directionDown, targetMeshes, isFailOutcome, tacklerMeshes, reactorMeshes, cb){
+    const isPanthersRaiding = directionDown; // matches prior semantics: directionDown = AI/Panthers raiding
+    const startZ = isPanthersRaiding ? PANTHERS_BAULK_Z : TIGERS_BAULK_Z;
+    let farZ, farX;
+
+    const focusMeshes = (targetMeshes && targetMeshes.length) ? targetMeshes
+                       : (tacklerMeshes && tacklerMeshes.length ? tacklerMeshes : null);
+
+    if(focusMeshes){
+      farX = focusMeshes.reduce((s,m)=> s+m.position.x, 0) / focusMeshes.length;
+      const rowZ = focusMeshes[0].position.z; // fixed row depth for that team
+      farZ = rowZ + (isPanthersRaiding ? -0.5 : 0.5); // stop just short to "reach" them
+    } else {
+      farX = 0;
+      farZ = isPanthersRaiding ? TIGERS_DEEP_Z : PANTHERS_DEEP_Z;
+    }
+
+    const colorHex = state.turn === 'player' ? TIGERS_HEX : PANTHERS_HEX;
+    raiderMesh3d.userData.bodyMat.color.setHex(colorHex);
+    if(!raiderMesh3d.visible){
+      raiderMesh3d.position.set(0, 0, startZ);
+    }
+    const currentZ = raiderMesh3d.position.z;
+    const currentX = raiderMesh3d.position.x;
+    raiderMesh3d.rotation.set(0,0,0);
+    raiderMesh3d.scale.set(1,1,1);
+    raiderMesh3d.userData.tackled = false;
+    raiderMesh3d.visible = true;
+
+    braceDefenders(reactorMeshes, true);
+
+    tweenNumber(currentZ, farZ, 900, v=>{ raiderMesh3d.position.z = v; });
+    tweenNumber(currentX, farX, 900, v=>{ raiderMesh3d.position.x = v; }, ()=>{
+      if(isFailOutcome){
+        // Tackled! One or more defenders lunge in to bring the raider down.
+        raiderMesh3d.userData.tackled = true;
+        triggerShake();
+        const lungers = (tacklerMeshes||[]).map(m=>{
+          const x = m.position.x, z = m.position.z;
+          const dx = (raiderMesh3d.position.x - x) * 0.4;
+          const dz = (raiderMesh3d.position.z - z) * 0.4;
+          return {m, x, z, dx, dz};
+        });
+        lungers.forEach(o=> tweenNumber(0, 1, 180, v=>{ o.m.position.x = o.x + o.dx*v; o.m.position.z = o.z + o.dz*v; }));
+        tweenNumber(0, (isPanthersRaiding?-1:1)*1.35, 220, v=>{ raiderMesh3d.rotation.x = v; });
+        setTimeout(()=>{
+          tweenNumber(1, 0, 320, v=>{ raiderMesh3d.scale.set(v,v,v); }, ()=>{
+            raiderMesh3d.visible = false;
+            raiderMesh3d.rotation.set(0,0,0);
+            lungers.forEach(o=> tweenNumber(1, 0, 260, v=>{ o.m.position.x = o.x + o.dx*v; o.m.position.z = o.z + o.dz*v; }));
+            braceDefenders(reactorMeshes, false);
+            cb();
+          });
+        }, 300);
+      } else {
+        flashTouch(targetMeshes);
+        if(!targetMeshes.length && reactorMeshes && reactorMeshes.length){
+          swipeMissDefenders(reactorMeshes, raiderMesh3d.position);
+        }
+        tweenNumber(farZ, startZ, 900, v=>{ raiderMesh3d.position.z = v; });
+        tweenNumber(farX, 0, 900, v=>{ raiderMesh3d.position.x = v; }, ()=>{
+          raiderMesh3d.visible = false;
+          braceDefenders(reactorMeshes, false);
+          cb();
+        });
+      }
+    });
+  }
+
+  function startChantChallenge(move, onDone){
+    const challengeEl = el('chantChallenge');
+    const textEl = el('chantText');
+    const btn = el('chantBtn');
+    const miniBar = el('miniBreathBar');
+    challengeEl.classList.remove('hidden');
+    movesEl.classList.add('hidden');
+    sfx.whistle();
+
+    let breath = 100;
+    const drainPerTick = {hand:9, toe:13, dodge:11, bonus:15}[move] || 10;
+    const tickMs = 130;
+    const totalTicks = 22;
+    let ticks = 0;
+    const MIC_VOICE_THRESHOLD = 0.045;
+    let lastMicFeedback = 0;
+
+    breathBar.style.transition = 'width 0.1s linear';
+    breathBar.style.width = '100%';
+    miniBar.style.width = '100%';
+    if(micEnabled) micStatusEl.textContent = '🎤 Listening — chant "Kabaddi!" loudly!';
+
+    // Show the raider right away at the baulk line so chanting/tapping visibly advances them
+    raiderMesh3d.userData.bodyMat.color.setHex(TIGERS_HEX);
+    raiderMesh3d.position.set(0, 0, TIGERS_BAULK_Z);
+    raiderMesh3d.rotation.set(0,0,0);
+    raiderMesh3d.scale.set(1,1,1);
+    raiderMesh3d.userData.tackled = false;
+    raiderMesh3d.visible = true;
+
+    // A couple of nearby defenders back away while you're safely chanting, then rush in if you run out of breath
+    const chantDefenders = pickVisibleMeshes(panthersMeshes, Math.min(2, panthersMeshes.filter(m=>m.visible).length))
+      .map(m=>({ m, origZ: m.position.z }));
+
+    function nudgeForward(amount){
+      raiderMesh3d.position.z = Math.max(CHANT_ADVANCE_MIN_Z, raiderMesh3d.position.z - amount);
+      chantDefenders.forEach(o=>{
+        const retreatFloor = o.origZ - 1.3;
+        o.m.position.z = Math.max(retreatFloor, o.m.position.z - amount*0.55);
+      });
+    }
+
+    const timer = setInterval(()=>{
+      breath = Math.max(0, breath - drainPerTick);
+
+      if(micEnabled){
+        const level = getMicLevel();
+        if(level > MIC_VOICE_THRESHOLD){
+          breath = Math.min(100, breath + 16);
+          nudgeForward(0.16);
+          const now = Date.now();
+          if(now - lastMicFeedback > 220){
+            lastMicFeedback = now;
+            textEl.classList.remove('pulse');
+            void textEl.offsetWidth;
+            textEl.classList.add('pulse');
+            sfx.tap();
+          }
+          micStatusEl.textContent = '🎤 Chanting detected!';
+        } else {
+          micStatusEl.textContent = '🎤 Listening — chant "Kabaddi!" loudly!';
+        }
+      }
+
+      breathBar.style.width = breath + '%';
+      miniBar.style.width = breath + '%';
+      ticks++;
+      if(breath <= 0){ finish(false); return; }
+      if(ticks >= totalTicks){ finish(true); return; }
+    }, tickMs);
+
+    function tap(){
+      breath = Math.min(100, breath + 11);
+      breathBar.style.width = breath + '%';
+      miniBar.style.width = breath + '%';
+      nudgeForward(0.45);
+      textEl.classList.remove('pulse');
+      void textEl.offsetWidth;
+      textEl.classList.add('pulse');
+      sfx.tap();
+    }
+    btn.onclick = tap;
+    activeTapFn = tap;
+
+    function finish(held){
+      clearInterval(timer);
+      btn.onclick = null;
+      activeTapFn = null;
+      if(micEnabled) micStatusEl.textContent = 'Chant or shout "Kabaddi!" loudly during your raid.';
+      challengeEl.classList.add('hidden');
+      movesEl.classList.remove('hidden');
+      el('raidTitle').textContent = 'Raiding...';
+      if(!held){
+        // Breath broke — the defenders who were backing away now rush straight at the raider
+        chantDefenders.forEach(o=>{
+          const targetZ = raiderMesh3d.position.z + (o.origZ > raiderMesh3d.position.z ? 0.35 : -0.35);
+          tweenNumber(o.m.position.z, targetZ, 260, v=> o.m.position.z = v, ()=>{
+            setTimeout(()=>{
+              tweenNumber(o.m.position.z, o.origZ, 400, v=> o.m.position.z = v);
+            }, 1300);
+          });
+        });
+      } else {
+        // Raid continues — let them drift back to their original spot
+        chantDefenders.forEach(o=> tweenNumber(o.m.position.z, o.origZ, 300, v=> o.m.position.z = v));
+      }
+      onDone(!held);
+    }
+  }
+
+  function startPlayerRaid(move){
+    if(state.resolving || state.matchOver || state.turn !== 'player') return;
+    ensureAudio();
+    state.resolving = true;
+    setButtonsEnabled(false);
+    nextBtn.classList.add('hidden');
+    el('raidTitle').textContent = 'Hold your breath — keep chanting!';
+    startChantChallenge(move, (breathFail)=> performRaid(move, breathFail));
+  }
+
+  function aiRaid(move){
+    state.resolving = true;
+    const failChance = {hand:6, toe:12, dodge:9, bonus:14}[move] || 8;
+    const breathFail = Math.random()*100 < failChance;
+    breathBar.style.transition = 'width 0.8s ease-out';
+    breathBar.style.width = breathFail ? '0%' : Math.round(40 + Math.random()*55) + '%';
+    performRaid(move, breathFail);
+  }
+
+  function performRaid(move, breathFail){
+    const raiderKey = state.turn === 'player' ? 'tigers' : 'panthers';
+    const defKey = state.turn === 'player' ? 'panthers' : 'tigers';
+    const raiderTeam = state.teams[raiderKey];
+    const defTeam = state.teams[defKey];
+    const defCountBefore = onCourtCount(defTeam);
+    const chance = moveOdds(move, raiderTeam, defTeam);
+    const roll = Math.random()*100;
+    const success = !breathFail && (roll < chance);
+    const isDoOrDie = raiderTeam.emptyRaidStreak >= 2;
+
+    const goingUp = state.turn === 'player'; // player(tigers, bottom half) raids upward into panthers half
+
+    // Pre-select which specific defender(s) will be touched (if this raid succeeds) so the
+    // raider mesh can actually animate toward them, rather than a generic point on the court.
+    let targetPlayers = [];
+    if(!breathFail && success){
+      if(move === 'hand'){ targetPlayers = pickInPlayers(defTeam, 1); }
+      else if(move === 'toe'){ targetPlayers = pickInPlayers(defTeam, Math.min(2, defCountBefore)); }
+    }
+    const defMeshes = defKey === 'tigers' ? tigersMeshes : panthersMeshes;
+    const targetMeshes = targetPlayers.map(p => defMeshes[defTeam.players.indexOf(p)]).filter(Boolean);
+
+    // Whether this raid ends with the raider getting tackled/knocked down visually
+    const isFailOutcome = breathFail || !success || (move === 'dodge' && success && isDoOrDie);
+
+    // Pick which defender(s) visually make the tackle (more of them if defense is down to its last few)
+    let tacklerPlayers = [];
+    if(isFailOutcome && defCountBefore > 0){
+      const tacklerCount = defCountBefore <= 3 ? Math.min(2, defCountBefore) : 1;
+      tacklerPlayers = pickInPlayers(defTeam, tacklerCount);
+    }
+    const tacklerMeshes = tacklerPlayers.map(p => defMeshes[defTeam.players.indexOf(p)]).filter(Boolean);
+
+    // Defenders who visibly react/contest this raid (brace + swipe), even when they don't end up
+    // being the one who scores or gets tackled — so the defense never looks purely passive.
+    let reactorMeshes = targetMeshes.length ? targetMeshes : (tacklerMeshes.length ? tacklerMeshes : []);
+    if(!reactorMeshes.length && defCountBefore > 0){
+      const reactPlayers = pickInPlayers(defTeam, Math.min(2, defCountBefore));
+      reactorMeshes = reactPlayers.map(p => defMeshes[defTeam.players.indexOf(p)]).filter(Boolean);
+    }
+
+    setTimeout(()=>{
+      animateRaider(!goingUp, targetMeshes, isFailOutcome, tacklerMeshes, reactorMeshes, ()=>{
+        let msg = '';
+        let raiderScored = false;
+        const raiderLabel = raiderTeam.name;
+        const doOrDieTag = isDoOrDie ? '⚠️ Do-or-Die: ' : '';
+
+        if(breathFail){
+          const superTackle = defCountBefore <= 3;
+          defTeam.score.tackle += superTackle ? 2 : 1;
+          msg = doOrDieTag + raiderLabel + ' — dom bhenge gyeche! Lost the chant and the breath broke mid-raid. ' + (superTackle? 'SUPER TACKLE! +2 to ' : '+1 tackle point to ') + defTeam.name + '.';
+          revive(defTeam);
+        } else if(move === 'hand'){
+          if(success){
+            const removed = applyOut(defTeam, targetPlayers);
+            raiderTeam.score.raid += 1;
+            raiderScored = true;
+            msg = doOrDieTag + raiderLabel + ' — Hand Touch ✅ tags ' + (removed[0]||'a defender') + '. +1 point.';
+            revive(raiderTeam);
+          } else {
+            const superTackle = defCountBefore <= 3;
+            defTeam.score.tackle += superTackle ? 2 : 1;
+            msg = doOrDieTag + raiderLabel + ' — Hand Touch ❌ caught! ' + (superTackle? 'SUPER TACKLE! +2 to ' : '+1 tackle point to ') + defTeam.name + '.';
+            revive(defTeam);
+          }
+        } else if(move === 'toe'){
+          if(success){
+            const removed = applyOut(defTeam, targetPlayers);
+            raiderTeam.score.raid += removed.length;
+            raiderScored = true;
+            msg = doOrDieTag + raiderLabel + ' — Toe Touch ✅ tags ' + removed.join(' & ') + '. +' + removed.length + ' points.';
+            revive(raiderTeam);
+          } else {
+            const superTackle = defCountBefore <= 3;
+            defTeam.score.tackle += superTackle ? 2 : 1;
+            msg = doOrDieTag + raiderLabel + ' — Toe Touch ❌ caught reaching too far! ' + (superTackle? 'SUPER TACKLE! +2 to ' : '+1 tackle point to ') + defTeam.name + '.';
+            revive(defTeam);
+          }
+        } else if(move === 'dodge'){
+          if(success){
+            if(isDoOrDie){
+              const superTackle = defCountBefore <= 3;
+              defTeam.score.tackle += superTackle ? 2 : 1;
+              msg = doOrDieTag + raiderLabel + ' — slipped through empty-handed, but a do-or-die raid MUST score. Ruled OUT! ' + (superTackle? 'SUPER TACKLE! +2 to ' : '+1 tackle point to ') + defTeam.name + '.';
+              revive(defTeam);
+            } else {
+              msg = raiderLabel + ' — Dodge & Dash ✅ slips through clean. Empty raid, no points.';
+            }
+          } else {
+            const superTackle = defCountBefore <= 3;
+            defTeam.score.tackle += superTackle ? 2 : 1;
+            msg = doOrDieTag + raiderLabel + ' — Dodge & Dash ❌ boxed in and tackled! ' + (superTackle? 'SUPER TACKLE! +2 to ' : '+1 tackle point to ') + defTeam.name + '.';
+            revive(defTeam);
+          }
+        } else if(move === 'bonus'){
+          if(success){
+            raiderTeam.score.bonus += 1;
+            raiderScored = true;
+            msg = doOrDieTag + raiderLabel + ' — Bonus Raid ✅ crosses the bonus line! +1 bonus point.';
+            revive(raiderTeam);
+          } else {
+            const superTackle = defCountBefore <= 3;
+            defTeam.score.tackle += superTackle ? 2 : 1;
+            msg = doOrDieTag + raiderLabel + ' — Bonus Raid ❌ caught reaching for the line! ' + (superTackle? 'SUPER TACKLE! +2 to ' : '+1 tackle point to ') + defTeam.name + '.';
+            revive(defTeam);
+          }
+        }
+
+        raiderTeam.emptyRaidStreak = raiderScored ? 0 : (isDoOrDie ? 0 : raiderTeam.emptyRaidStreak + 1);
+        state.lastRaidScored = raiderScored;
+
+        let outcome;
+        if(raiderScored){ outcome = move === 'bonus' ? 'bonus' : 'touch'; }
+        else if(move === 'dodge' && success && !isDoOrDie && !breathFail){ outcome = 'empty'; }
+        else { outcome = 'tackle'; }
+
+        if(outcome === 'touch'){ sfx.touch(); burstConfetti(['#006a4e','#e8b23b','#ffffff'], 14); cheerCrowd(false); }
+        else if(outcome === 'bonus'){ sfx.bonus(); burstConfetti(['#e8b23b','#ffffff'], 16); cheerCrowd(false); }
+        else if(outcome === 'tackle'){ sfx.tackle(); triggerShake(); cheerCrowd(false); }
+
+        log(msg, raiderScored);
+        checkAllOut(defKey, raiderKey);
+        renderTokens();
+        renderScore();
+        advanceTurn();
+      });
+    }, 150);
+  }
+
+  function aiChooseMove(defTeam){
+    const eligible = bonusEligible(defTeam);
+    const weights = eligible ? {hand:40, toe:20, dodge:15, bonus:25} : {hand:55, toe:25, dodge:20, bonus:0};
+    const entries = Object.entries(weights).filter(([,w])=>w>0);
+    const total = entries.reduce((s,[,w])=>s+w,0);
+    let r = Math.random()*total;
+    for(const [m,w] of entries){ if(r<w) return m; r-=w; }
+    return 'hand';
+  }
+
+  function advanceTurn(){
+    state.resolving = false;
+
+    if(state.goldenRaid){
+      if(state.lastRaidScored){
+        const raiderKey = state.turn === 'player' ? 'tigers' : 'panthers';
+        declareGoldenWinner(raiderKey);
+        return;
+      }
+      state.turn = state.turn === 'player' ? 'ai' : 'player';
+      if(state.turn === 'player'){
+        el('raidTitle').textContent = '🥇 GOLDEN RAID — your turn, score to win!';
+        updateOddsDisplay();
+        setButtonsEnabled(true);
+      } else {
+        el('raidTitle').textContent = '🥇 GOLDEN RAID — Panthers raiding...';
+        setButtonsEnabled(false);
+        setTimeout(()=>{
+          const move = aiChooseMove(state.teams.tigers);
+          aiRaid(move);
+        }, 900);
+      }
+      return;
+    }
+
+    if(state.turn === 'player'){
+      // it's now AI's raid, auto-trigger after a short pause
+      state.turn = 'ai';
+      const warnAi = state.teams.panthers.emptyRaidStreak >= 2 ? '⚠️ Do-or-Die for Panthers! ' : '';
+      el('raidTitle').textContent = warnAi + "Rajshahi Panthers are raiding...";
+      setButtonsEnabled(false);
+      setTimeout(()=>{
+        const move = aiChooseMove(state.teams.tigers);
+        aiRaid(move);
+      }, 900);
+    } else {
+      state.pairCount += 1;
+      if(state.pairCount >= RAIDS_PER_HALF_PER_TEAM){
+        state.pairCount = 0;
+        if(state.half === 1){
+          state.half = 2;
+          log('🕐 Half-time! Teams swap raiding order continues.', true);
+          sfx.halftime();
+        } else {
+          endMatch();
+          return;
+        }
+      }
+      state.turn = 'player';
+      const isDoOrDieNow = state.teams.tigers.emptyRaidStreak >= 2;
+      const warn = isDoOrDieNow ? '⚠️ Do-or-Die Raid! ' : '';
+      el('raidTitle').textContent = warn + 'Your Raid — choose a move';
+      el('raidPanel').classList.toggle('do-or-die', isDoOrDieNow);
+      updateOddsDisplay();
+      setButtonsEnabled(true);
+      renderScore();
+    }
+  }
+
+  function startGoldenRaid(){
+    state.goldenRaid = true;
+    log('🥇 Scores level at full time! Golden Raid — sudden death, first score wins.', true);
+    sfx.goldenSting();
+    el('ticketBar').classList.add('golden');
+    state.turn = Math.random() < 0.5 ? 'player' : 'ai';
+    if(state.turn === 'player'){
+      el('raidTitle').textContent = '🥇 GOLDEN RAID — score to win!';
+      updateOddsDisplay();
+      setButtonsEnabled(true);
+    } else {
+      el('raidTitle').textContent = '🥇 GOLDEN RAID — Panthers raiding...';
+      setButtonsEnabled(false);
+      setTimeout(()=>{
+        const move = aiChooseMove(state.teams.tigers);
+        aiRaid(move);
+      }, 900);
+    }
+  }
+
+  function declareGoldenWinner(raiderKey){
+    state.matchOver = true;
+    renderScore();
+    const winnerTeam = state.teams[raiderKey];
+    const tScore = totalScore(state.teams.tigers);
+    const aScore = totalScore(state.teams.panthers);
+    el('endScore').textContent = tScore + ' : ' + aScore;
+    el('endWinner').textContent = '🥇 Golden Raid winner: ' + winnerTeam.name + '!';
+    el('endMvp').textContent = winnerTeam.name + ' scored the sudden-death raid to clinch it.';
+    sfx.matchEnd();
+    burstConfetti(['#e8b23b','#006a4e','#f42a41','#ffffff'], 32);
+    cheerCrowd(true);
+    el('endOverlay').classList.add('show');
+  }
+
+  function endMatch(){
+    const tScore = totalScore(state.teams.tigers);
+    const aScore = totalScore(state.teams.panthers);
+    if(tScore === aScore){
+      startGoldenRaid();
+      return;
+    }
+    state.matchOver = true;
+    renderScore();
+    el('endScore').textContent = tScore + ' : ' + aScore;
+    let winner;
+    if(tScore>aScore) winner = state.teams.tigers.name + ' win the match! 🏆';
+    else winner = state.teams.panthers.name + ' win the match! 🏆';
+    el('endWinner').textContent = winner;
+    const tigerRaidShare = state.teams.tigers.score.raid + state.teams.tigers.score.bonus;
+    const pantherRaidShare = state.teams.panthers.score.raid + state.teams.panthers.score.bonus;
+    const mvpTeam = tigerRaidShare >= pantherRaidShare ? state.teams.tigers.name : state.teams.panthers.name;
+    el('endMvp').textContent = 'Top raiding side: ' + mvpTeam;
+    sfx.matchEnd();
+    burstConfetti(['#e8b23b','#006a4e','#f42a41','#ffffff'], 28);
+    cheerCrowd(true);
+    el('endOverlay').classList.add('show');
+  }
+
+  movesEl.querySelectorAll('.move-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=> startPlayerRaid(btn.dataset.move));
+  });
+
+  function beginMatch(nameA, nameB){
+    const finalA = (nameA && nameA.trim()) ? nameA.trim() : 'Bangladesh Tigers';
+    const finalB = (nameB && nameB.trim()) ? nameB.trim() : 'Rajshahi Panthers';
+    el('endOverlay').classList.remove('show');
+    logEl.innerHTML = '';
+    prevScoreTotal = 0;
+    el('raidPanel').classList.remove('do-or-die');
+    el('ticketBar').classList.remove('golden');
+    freshState(finalA, finalB);
+    el('teamAName').textContent = finalA;
+    el('teamBName').textContent = finalB;
+    renderTokens();
+    renderScore();
+    updateOddsDisplay();
+    setButtonsEnabled(true);
+    el('raidTitle').textContent = 'Your Raid — choose a move';
+    log('🏟️ ' + finalA + ' vs ' + finalB + ' — match begins! ' + finalA + ' raid first.', true);
+  }
+
+  function openStartScreen(){
+    el('teamAInput').value = state.teams.tigers.name;
+    el('teamBInput').value = state.teams.panthers.name;
+    el('endOverlay').classList.remove('show');
+    el('startOverlay').classList.add('show');
+  }
+
+  el('playAgainBtn').addEventListener('click', openStartScreen);
+
+  el('restartBtn').addEventListener('click', ()=>{
+    if(state.matchOver || confirm('Start a new game? Current match progress will be lost.')){
+      openStartScreen();
+    }
+  });
+
+  el('infoBtn').addEventListener('click', ()=>{
+    el('infoOverlay').classList.add('show');
+  });
+  el('closeInfoBtn').addEventListener('click', ()=>{
+    el('infoOverlay').classList.remove('show');
+  });
+  el('infoOverlay').addEventListener('click', (e)=>{
+    if(e.target.id === 'infoOverlay') el('infoOverlay').classList.remove('show');
+  });
+
+  el('startMatchBtn').addEventListener('click', function(){
+    const nameA = el('teamAInput').value;
+    const nameB = el('teamBInput').value;
+    beginMatch(nameA, nameB);
+    el('startOverlay').classList.remove('show');
+    ensureAudio();
+    if(!micEnabled){ enableMic(); }
+  });
+
+  // init
+  init3dScene();
+  renderTokens();
+  renderScore();
+  updateOddsDisplay();
+  log('🏟️ Match begins on the village court. Bangladesh Tigers raid first.', true);
+})();
+</script>
+</body>
+</html>
