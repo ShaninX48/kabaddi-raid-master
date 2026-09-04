@@ -36,7 +36,7 @@
     height:100dvh;
     height:100vh;
     overflow-y:auto;
-    background: linear-gradient(180deg, #cfe6c9 0%, #a9c98f 40%, var(--grass) 100%);
+    background: linear-gradient(180deg, #0e2416 0%, #1c3d24 55%, #2f5d34 100%);
     font-family:'Roboto Slab', serif;
     color: var(--ink);
     display:flex;
@@ -68,7 +68,7 @@
     position:absolute;
     top:50%; transform:translateY(-50%);
     width:22px; height:22px;
-    background: linear-gradient(180deg, #cfe6c9, var(--grass));
+    background: linear-gradient(180deg, #0e2416, #1c3d24);
     border-radius:50%;
   }
   .ticket::before{ left:-11px; }
@@ -209,10 +209,11 @@
   .raid-header h3{ font-size:0.95rem; }
   .breath-wrap{
     background: rgba(0,0,0,0.12);
-    border-radius: 6px;
-    height: 9px;
+    border-radius: 8px;
+    height: 16px;
     overflow:hidden;
     margin-bottom: 10px;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.25);
   }
   .breath-bar{
     height:100%;
@@ -239,6 +240,9 @@
   .move-btn .m-name{ font-weight:700; display:block; font-size:0.92rem; }
   .move-btn .m-desc{ font-size:0.72rem; color:var(--ink-soft); }
   .move-btn .m-odds{ font-family:'Space Mono'; font-size:0.68rem; color:var(--ink-soft); float:right; }
+  .m-bar{ display:block; height:6px; border-radius:3px; background:rgba(0,0,0,0.1); margin-top:7px; overflow:hidden; }
+  .m-fill{ display:block; height:100%; width:0%; background:linear-gradient(90deg, var(--tigers), var(--sun)); transition:width 0.3s; }
+  .m-fill.low{ background:linear-gradient(90deg, var(--tigers-accent), var(--sun)); }
 
   .next-btn{
     width:100%; margin-top:12px;
@@ -346,14 +350,14 @@
   /* ---------- Real-time raid controls ---------- */
   .real-controls{ display:flex; gap:8px; align-items:stretch; margin-top:10px; flex-wrap:wrap; }
   .tag-btn{
-    flex:1; min-width:130px; padding:12px 10px; border:none; border-radius:10px;
+    flex:1; min-width:130px; min-height:56px; padding:12px 10px; border:none; border-radius:10px;
     background: linear-gradient(180deg, var(--tigers-accent), #b81f33); color:#fff;
     font-family:'Anton'; font-size:1rem; letter-spacing:1px; cursor:pointer;
     box-shadow: 0 4px 0 #7d1522; user-select:none; touch-action:manipulation;
   }
   .tag-btn:active{ transform: translateY(3px); box-shadow:none; }
   .sprint-btn{
-    flex:1; min-width:130px; padding:12px 10px; border:2px solid var(--tigers); border-radius:10px;
+    flex:1; min-width:130px; min-height:56px; padding:12px 10px; border:2px solid var(--tigers); border-radius:10px;
     background:#fff; color:var(--tigers);
     font-family:'Anton'; font-size:1rem; letter-spacing:1px; cursor:pointer;
     user-select:none; touch-action:manipulation;
@@ -397,6 +401,23 @@
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   }
   .comm-banner.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  /* ---------- D: mobile-first responsive + focus ---------- */
+  button:focus-visible{ outline:2px solid var(--sun); outline-offset:2px; }
+  @media (max-width:480px){
+    body{ padding:6px 6px 4px; }
+    .ticket{ padding:8px 10px; gap:6px; }
+    .score-digits{ font-size:1.9rem; }
+    .team-block .name{ font-size:0.85rem; }
+    .half-label{ font-size:0.58rem; }
+    .court{ height: clamp(150px, 30vh, 260px); }
+    .field{ padding:8px 10px; }
+    .raid-panel{ padding:10px 12px; }
+    .move-btn{ padding:9px 10px; }
+    .modal{ padding:20px 16px; }
+    .comm-banner{ font-size:0.72rem; bottom:6px; }
+    .menu-drop{ min-width:170px; }
+  }
 
   /* ---------- Chant challenge (floats beside/over the game, no scrolling needed) ---------- */
   .chant-challenge{
@@ -465,9 +486,9 @@
     100%{ transform: scale(1); color: var(--tigers-accent); }
   }
   .chant-btn{
-    padding: 16px 30px;
+    padding: 20px 30px;
     font-family:'Anton', sans-serif;
-    font-size:1.15rem;
+    font-size:1.35rem;
     letter-spacing:1px;
     border:none; border-radius: 50px;
     background: linear-gradient(180deg, var(--tigers-accent), #b81f33);
@@ -556,6 +577,51 @@
   .restart-btn:hover, .mute-btn:hover, .info-btn:hover, .install-btn:hover{ background: rgba(0,0,0,0.16); }
   .ticket{ position:relative; }
 
+  /* ---------- A: ticket menu + team strips + bigger score ---------- */
+  .menu-btn{
+    position:absolute; top:8px; right:14px;
+    width:30px; height:30px; border-radius:50%;
+    border:none; background:rgba(0,0,0,0.08);
+    font-size:1.05rem; font-weight:700; cursor:pointer; line-height:1;
+    display:flex; align-items:center; justify-content:center; color:var(--ink);
+  }
+  .menu-btn:hover{ background:rgba(0,0,0,0.16); }
+  .menu-drop{
+    position:absolute; top:46px; right:10px; z-index:60;
+    background:var(--paper); border-radius:12px; overflow:hidden;
+    box-shadow:0 10px 24px rgba(0,0,0,0.35);
+    min-width:200px; border:2px solid var(--paper-dark);
+  }
+  .menu-item{
+    display:flex; align-items:center; gap:10px; width:100%;
+    padding:12px 14px; border:none; background:transparent;
+    font-family:'Roboto Slab', serif; font-size:0.86rem; font-weight:700; color:var(--ink);
+    cursor:pointer; text-align:left;
+  }
+  .menu-item:hover{ background:rgba(0,106,78,0.1); }
+  .menu-item + .menu-item{ border-top:1px solid var(--paper-dark); }
+  .menu-item .mi{ font-size:1.05rem; width:26px; text-align:center; }
+  .team-block{ border-top:4px solid transparent; border-radius:5px; padding-top:3px; }
+  .team-block.tigers{ border-top-color: var(--tigers); }
+  .team-block.panthers{ border-top-color: var(--panthers); }
+  .score-digits{ font-size:2.5rem; }
+
+  /* ---------- C: start stepper ---------- */
+  .step{ display:none; }
+  .step.active{ display:block; animation: stepIn 0.25s ease-out; }
+  @keyframes stepIn{ from{ opacity:0; transform:translateX(14px); } to{ opacity:1; transform:none; } }
+  .step-dots{ display:flex; justify-content:center; gap:10px; margin:8px 0 2px; font-size:0.72rem; font-weight:700; color:var(--ink-soft); }
+  .step-dots .dot{ cursor:pointer; padding:2px 6px; border-radius:12px; }
+  .step-dots .dot.active{ color:#fff; background:var(--tigers); }
+  .step-nav{ display:flex; gap:8px; margin-top:10px; }
+  .step-nav button{
+    flex:1; padding:11px; border-radius:10px; cursor:pointer;
+    border:2px solid var(--paper-dark); background:#fff;
+    font-family:'Roboto Slab', serif; font-weight:700; font-size:0.86rem; color:var(--ink);
+    margin-top:0;
+  }
+  .step-nav #stepNextBtn{ background:var(--tigers); border-color:var(--tigers); color:#fff; }
+
   .info-modal{ text-align:left; max-height:80vh; overflow-y:auto; max-width:540px; }
   .info-modal h2{ text-align:center; }
   .info-modal .log-panel{ max-height:160px; margin-bottom:14px; margin-top:0; }
@@ -625,37 +691,55 @@
     <div class="modal">
       <h2>🏟️ Kabaddi: Raid Master</h2>
       <p style="margin:4px 0;">🗣️ Chant e breath dhoro — mic / tap button.</p>
-      <div class="mode-row" id="modeRow">
-        <button class="mode-btn selected" id="modeAiBtn" type="button">🤖 vs AI<small>You raid, AI defends + raids back</small></button>
-        <button class="mode-btn" id="mode2pBtn" type="button">👥 2 Players<small>Same screen, pass & play — P1 vs P2</small></button>
+      <div class="step-dots" id="stepDots">
+        <span class="dot active" data-step="1">① Mode</span>
+        <span class="dot" data-step="2">② Style</span>
+        <span class="dot" data-step="3">③ Teams</span>
       </div>
-      <div class="mode-row" id="styleRow">
-        <button class="mode-btn selected" id="styleClassicBtn" type="button">🎲 Classic raid<small>Move choose koro, auto animation</small></button>
-        <button class="mode-btn" id="styleRealBtn" type="button">🕹️ Real-time raid<small>Tumi nije douraba — WASD / drag + E tag</small></button>
+      <div class="step active" id="step1">
+        <div class="mode-row" id="modeRow">
+          <button class="mode-btn selected" id="modeAiBtn" type="button">🤖 vs AI<small>You raid, AI defends + raids back</small></button>
+          <button class="mode-btn" id="mode2pBtn" type="button">👥 2 Players<small>Same screen, pass & play — P1 vs P2</small></button>
+        </div>
       </div>
-      <div class="team-input-row">
-        <input type="text" id="teamAInput" value="UITS" maxlength="22">
-        <span class="vs-label">✕</span>
-        <input type="text" id="teamBInput" value="KAIST" maxlength="22">
+      <div class="step" id="step2">
+        <div class="mode-row" id="styleRow">
+          <button class="mode-btn selected" id="styleClassicBtn" type="button">🎲 Classic raid<small>Move choose koro, auto animation</small></button>
+          <button class="mode-btn" id="styleRealBtn" type="button">🕹️ Real-time raid<small>Tumi nije douraba — WASD / drag + E tag</small></button>
+        </div>
       </div>
-      <p style="font-size:0.78rem; color:var(--ink-soft);" id="modeHint">Solo: tumi <b>Team 1</b>, Team 2 auto.</p>
-      <details style="font-size:0.75rem; color:var(--ink-soft); margin:2px 0 6px; text-align:center;">
-        <summary style="cursor:pointer;">ℹ️ Mic / offline</summary>
-        <p style="margin:4px 0;">Mic sudhu HTTPS/localhost e (Chant-Khelo.bat). file:// te tap button.</p>
-        <p style="margin:4px 0;">Offline: browser menu → Install, ba <a href="https://github.com/ShaninX48/kabaddi-raid-master/archive/refs/heads/main.zip">ZIP download</a>.</p>
-      </details>
-      <button id="startMatchBtn">🚩 Start Match</button>
-      <div style="font-size:0.62rem; color:var(--ink-soft); opacity:0.7; margin-top:8px;">ver 6 • বাংলা/English ধারাভাষ্য</div>
+      <div class="step" id="step3">
+        <div class="team-input-row">
+          <input type="text" id="teamAInput" value="UITS" maxlength="22">
+          <span class="vs-label">✕</span>
+          <input type="text" id="teamBInput" value="KAIST" maxlength="22">
+        </div>
+        <p style="font-size:0.78rem; color:var(--ink-soft);" id="modeHint">Solo: tumi <b>Team 1</b>, Team 2 auto.</p>
+        <details style="font-size:0.75rem; color:var(--ink-soft); margin:2px 0 6px; text-align:center;">
+          <summary style="cursor:pointer;">ℹ️ Mic / offline</summary>
+          <p style="margin:4px 0;">Mic sudhu HTTPS/localhost e (Chant-Khelo.bat). file:// te tap button.</p>
+          <p style="margin:4px 0;">Offline: browser menu → Install, ba <a href="https://github.com/ShaninX48/kabaddi-raid-master/archive/refs/heads/main.zip">ZIP download</a>.</p>
+        </details>
+      </div>
+      <div class="step-nav">
+        <button id="stepBackBtn" type="button" class="hidden">← Back</button>
+        <button id="stepNextBtn" type="button">Next →</button>
+      </div>
+      <button id="startMatchBtn" class="hidden">🚩 Start Match</button>
+      <div style="font-size:0.62rem; color:var(--ink-soft); opacity:0.7; margin-top:8px;">ver 7 • notun UI</div>
     </div>
   </div>
 
   <div class="ticket" id="ticketBar">
     <button class="mute-btn" id="muteBtn" type="button" title="Toggle sound">🔊</button>
     <button class="restart-btn" id="restartBtn" type="button" title="Start a new game">🔄</button>
-    <button class="comm-btn" id="commBtn" type="button" title="Bangla commentary on/off">🎙️</button>
-    <button class="info-btn" id="infoBtn" type="button" title="Match log & stats">📊</button>
-    <button class="install-btn" id="installBtn" type="button" title="Install / download kore offline khelo">⬇️</button>
-    <button class="sub-btn" id="subBtn" type="button" title="Subtitle: Bangla / English">বাং</button>
+    <button class="menu-btn" id="menuBtn" type="button" title="More options">⋮</button>
+    <div class="menu-drop hidden" id="menuDrop">
+      <button class="menu-item" id="commBtn" type="button"><span class="mi" id="commIcon">🎙️</span><span>Commentary</span></button>
+      <button class="menu-item" id="subBtn" type="button"><span class="mi">🌐</span><span id="subBtnLabel">বাংলা</span></button>
+      <button class="menu-item" id="installBtn" type="button"><span class="mi">⬇️</span><span>Install / Offline</span></button>
+      <button class="menu-item" id="infoBtn" type="button"><span class="mi">📊</span><span>Log &amp; Stats</span></button>
+    </div>
     <div class="team-block tigers">
       <div class="name" id="teamAName">Bangladesh Tigers</div>
       <div class="sub" id="tigersOnCourt">7 on court</div>
@@ -705,21 +789,25 @@
         <span class="m-odds" id="oddsHand"></span>
         <span class="m-name">✋ Hand Touch</span>
         <span class="m-desc">Safe single tag & retreat.</span>
+        <span class="m-bar"><span class="m-fill" id="fillHand"></span></span>
       </button>
       <button class="move-btn" data-move="toe">
         <span class="m-odds" id="oddsToe"></span>
         <span class="m-name">👣 Toe Touch</span>
         <span class="m-desc">Reach for two defenders — risky.</span>
+        <span class="m-bar"><span class="m-fill" id="fillToe"></span></span>
       </button>
       <button class="move-btn" data-move="dodge">
         <span class="m-odds" id="oddsDodge"></span>
         <span class="m-name">💨 Dodge & Dash</span>
         <span class="m-desc">Slip through the line, no touch.</span>
+        <span class="m-bar"><span class="m-fill" id="fillDodge"></span></span>
       </button>
       <button class="move-btn" data-move="bonus">
         <span class="m-odds" id="oddsBonus"></span>
         <span class="m-name">⭐ Bonus Raid</span>
         <span class="m-desc">Cross the bonus line (needs full defense).</span>
+        <span class="m-bar"><span class="m-fill" id="fillBonus"></span></span>
       </button>
     </div>
     <div class="real-controls hidden" id="realControls">
@@ -929,7 +1017,7 @@
   if(commBtn){
     commBtn.addEventListener('click', ()=>{
       commOn = !commOn;
-      commBtn.textContent = commOn ? '🎙️' : '🚫';
+      const ci = el('commIcon'); if(ci) ci.textContent = commOn ? '🎙️' : '🚫';
       commBtn.style.opacity = commOn ? 1 : 0.45;
       if(!commOn && 'speechSynthesis' in window){ try{ speechSynthesis.cancel(); }catch(e){} }
     });
@@ -995,7 +1083,7 @@
   let subLang = 'bn';
   try{ const s = localStorage.getItem('rm_sub'); if(s === 'bn' || s === 'en') subLang = s; }catch(e){}
   const subBtn = el('subBtn');
-  function renderSubBtn(){ if(subBtn) subBtn.textContent = subLang === 'bn' ? 'বাং' : 'EN'; }
+  function renderSubBtn(){ const l = el('subBtnLabel'); if(l) l.textContent = subLang === 'bn' ? 'বাংলা' : 'English'; }
   if(subBtn){
     renderSubBtn();
     subBtn.addEventListener('click', ()=>{
@@ -1005,6 +1093,19 @@
       commentary('touch'); // preview: notun vasay ekta line bajbe
     });
   }
+
+  // ---- Ticket ⋮ menu (A) ----
+  (function initTicketMenu(){
+    const menuBtn = el('menuBtn'), menuDrop = el('menuDrop');
+    if(!menuBtn || !menuDrop) return;
+    menuBtn.addEventListener('click', function(e){ e.stopPropagation(); menuDrop.classList.toggle('hidden'); });
+    document.addEventListener('click', function(e){
+      if(!menuDrop.classList.contains('hidden') && !menuDrop.contains(e.target)) menuDrop.classList.add('hidden');
+    });
+    menuDrop.addEventListener('click', function(e){
+      if(e.target.closest && e.target.closest('.menu-item')) menuDrop.classList.add('hidden');
+    });
+  })();
 
   function setMuted(next){
     muted = next;
@@ -1829,11 +1930,16 @@
     const raiderTeam = state.teams[raiderKey], defTeam = state.teams[defKey];
     ['hand','toe','dodge','bonus'].forEach(m=>{
       const idMap = {hand:'oddsHand', toe:'oddsToe', dodge:'oddsDodge', bonus:'oddsBonus'};
+      const fillMap = {hand:'fillHand', toe:'fillToe', dodge:'fillDodge', bonus:'fillBonus'};
       const oddsEl = el(idMap[m]);
+      const fillEl = el(fillMap[m]);
       if(m==='bonus' && !bonusEligible(defTeam)){
         oddsEl.textContent = 'locked';
+        if(fillEl){ fillEl.style.width = '0%'; fillEl.classList.add('low'); }
       } else {
-        oddsEl.textContent = moveOdds(m, raiderTeam, defTeam) + '%';
+        const odds = moveOdds(m, raiderTeam, defTeam);
+        oddsEl.textContent = odds + '%';
+        if(fillEl){ fillEl.style.width = odds + '%'; fillEl.classList.toggle('low', odds < 50); }
       }
     });
     const bonusBtn = movesEl.querySelector('[data-move="bonus"]');
@@ -2776,6 +2882,7 @@
       rtSetCamera(false);
     }catch(e){}
     el('teamAInput').value = state.teams.tigers.name;
+    showStep(1);
     el('teamBInput').value = state.teams.panthers.name;
     el('endOverlay').classList.remove('show');
     el('startOverlay').classList.add('show');
@@ -2830,6 +2937,24 @@
   }
   styleClassicBtn.addEventListener('click', ()=> setRaidStyle('classic'));
   styleRealBtn.addEventListener('click', ()=> setRaidStyle('real'));
+
+  // ---- Start stepper (C): ① Mode → ② Style → ③ Teams ----
+  let startStep = 1;
+  function showStep(n){
+    startStep = Math.max(1, Math.min(3, n));
+    [1,2,3].forEach(i=> el('step'+i).classList.toggle('active', i === startStep));
+    const dots = document.querySelectorAll('#stepDots .dot');
+    dots.forEach(d=> d.classList.toggle('active', +d.dataset.step === startStep));
+    el('stepBackBtn').classList.toggle('hidden', startStep === 1);
+    const last = startStep === 3;
+    el('stepNextBtn').classList.toggle('hidden', last);
+    el('startMatchBtn').classList.toggle('hidden', !last);
+  }
+  el('stepBackBtn').addEventListener('click', ()=> showStep(startStep-1));
+  el('stepNextBtn').addEventListener('click', ()=> showStep(startStep+1));
+  document.querySelectorAll('#stepDots .dot').forEach(d=>{
+    d.addEventListener('click', ()=> showStep(+d.dataset.step));
+  });
 
   // ---- Keyboard shortcuts: 1-4 = moves (great for hotseat multiplayer) ----
   document.addEventListener('keydown', (e)=>{
