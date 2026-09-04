@@ -1544,7 +1544,7 @@
         roof.position.set(pt[0], 3.15, pt[1]);
         scene3d.add(roof);
       });
-      [[-9,0],[9,0]].forEach(function(pt){
+      [[-8,0],[8,0]].forEach(function(pt){
         const stand = new THREE.Mesh(new THREE.BoxGeometry(2.6,3,15), standMat);
         stand.position.set(pt[0], 1.5, pt[1]);
         scene3d.add(stand);
@@ -1560,9 +1560,9 @@
         head.lookAt(0, 0, 0);
         scene3d.add(head);
       });
-      const banner = new THREE.Mesh(new THREE.PlaneGeometry(9.5,1.15),
+      const banner = new THREE.Mesh(new THREE.PlaneGeometry(10.5,1.35),
         new THREE.MeshBasicMaterial({map:createBannerTexture()}));
-      banner.position.set(0, 4.3, -10.1);
+      banner.position.set(0, 2.7, -8.85);
       scene3d.add(banner);
     })();
 

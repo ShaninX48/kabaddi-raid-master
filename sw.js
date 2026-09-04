@@ -1,5 +1,5 @@
 /* Kabaddi: Raid Master — offline support. Bump version to refresh cache. */
-const CACHE = 'raid-master-v1';
+const CACHE = 'raid-master-v2';
 const ASSETS = [
   './',
   './index.html',
