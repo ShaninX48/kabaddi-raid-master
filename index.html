@@ -701,6 +701,11 @@
           <button class="mode-btn selected" id="modeAiBtn" type="button">🤖 vs AI<small>You raid, AI defends + raids back</small></button>
           <button class="mode-btn" id="mode2pBtn" type="button">👥 2 Players<small>Same screen, pass & play — P1 vs P2</small></button>
         </div>
+        <div class="mode-row" id="diffRow">
+          <button class="mode-btn" id="diffEasyBtn" type="button">🟢 Easy<small>AI norom, aram e shekho</small></button>
+          <button class="mode-btn selected" id="diffMedBtn" type="button">🟡 Medium<small>Balanced khela</small></button>
+          <button class="mode-btn" id="diffHardBtn" type="button">🔴 Hard<small>AI chalak + fast defender</small></button>
+        </div>
       </div>
       <div class="step" id="step2">
         <div class="mode-row" id="styleRow">
@@ -726,7 +731,7 @@
         <button id="stepNextBtn" type="button">Next →</button>
       </div>
       <button id="startMatchBtn" class="hidden">🚩 Start Match</button>
-      <div style="font-size:0.62rem; color:var(--ink-soft); opacity:0.7; margin-top:8px;">ver 8 • defender AI fix</div>
+      <div style="font-size:0.62rem; color:var(--ink-soft); opacity:0.7; margin-top:8px;">ver 9 • difficulty level</div>
     </div>
   </div>
 
@@ -875,6 +880,19 @@
   let state;
   let selectedMode = 'ai'; // 'ai' = solo vs AI, '2p' = local multiplayer hotseat
   let raidStyle = 'classic'; // 'classic' = auto sim, 'real' = player moves the raider (WASD/drag)
+
+  /* ============ Difficulty: easy / medium / hard ============ */
+  let difficulty = 'medium';
+  try{ const dd = localStorage.getItem('rm_diff'); if(dd === 'easy' || dd === 'medium' || dd === 'hard') difficulty = dd; }catch(e){}
+  const DIFF = {
+    easy:   {human:12,  ai:-12, aiFail:1.6, rtDef:0.85, rtPress:0.7,  icon:'🟢 Easy'},
+    medium: {human:0,   ai:0,   aiFail:1.0, rtDef:1.0,  rtPress:1.0,  icon:'🟡 Medium'},
+    hard:   {human:-10, ai:10,  aiFail:0.6, rtDef:1.12, rtPress:1.3,  icon:'🔴 Hard'}
+  };
+  function sideRole(key){ // 2P te sobai human; solo te tigers=human, panthers=AI
+    if(state && state.mode === '2p') return 'human';
+    return key === 'tigers' ? 'human' : 'ai';
+  }
   function getRaiderKey(){ return state.turn === 'player' ? 'tigers' : 'panthers'; }
   function getDefKey(){ return state.turn === 'player' ? 'panthers' : 'tigers'; }
   function isHumanTurn(){ return state.mode === '2p' || state.turn === 'player'; }
@@ -1819,7 +1837,7 @@
       digitsEl.classList.add('bump');
     }
     prevScoreTotal = newTotal;
-    el('halfLabel').textContent = 'Half ' + state.half + ' · Raid ' + (state.pairCount+1) + '/' + RAIDS_PER_HALF_PER_TEAM;
+    el('halfLabel').textContent = 'Half ' + state.half + ' · Raid ' + (state.pairCount+1) + '/' + RAIDS_PER_HALF_PER_TEAM + ' · ' + ((DIFF[difficulty] || DIFF.medium).icon);
     el('tRaid').textContent = state.teams.tigers.score.raid;
     el('tTackle').textContent = state.teams.tigers.score.tackle;
     el('tBonus').textContent = state.teams.tigers.score.bonus;
@@ -1915,10 +1933,14 @@
     }
   }
 
-  function moveOdds(move, raiderTeam, defTeam){
+  function moveOdds(move, raiderKey, defKey){
+    const raiderTeam = state.teams[raiderKey], defTeam = state.teams[defKey];
     const base = {hand:65, toe:45, dodge:70, bonus:40}[move];
-    const effDef = defTeam.defenseStrength * (onCourtCount(defTeam)/7);
-    let chance = base + (raiderTeam.raiderSkill - effDef) * 0.6;
+    const d = DIFF[difficulty] || DIFF.medium;
+    const rSkill = raiderTeam.raiderSkill + (sideRole(raiderKey) === 'human' ? d.human : d.ai);
+    const dStr = defTeam.defenseStrength + (sideRole(defKey) === 'human' ? d.human : d.ai);
+    const effDef = dStr * (onCourtCount(defTeam)/7);
+    let chance = base + (rSkill - effDef) * 0.6;
     return Math.max(12, Math.min(90, Math.round(chance)));
   }
 
@@ -1937,7 +1959,7 @@
         oddsEl.textContent = 'locked';
         if(fillEl){ fillEl.style.width = '0%'; fillEl.classList.add('low'); }
       } else {
-        const odds = moveOdds(m, raiderTeam, defTeam);
+        const odds = moveOdds(m, raiderKey, defKey);
         oddsEl.textContent = odds + '%';
         if(fillEl){ fillEl.style.width = odds + '%'; fillEl.classList.toggle('low', odds < 50); }
       }
@@ -2173,7 +2195,7 @@
 
   function aiRaid(move){
     state.resolving = true;
-    const failChance = {hand:6, toe:12, dodge:9, bonus:14}[move] || 8;
+    const failChance = ({hand:6, toe:12, dodge:9, bonus:14}[move] || 8) * ((DIFF[difficulty] || DIFF.medium).aiFail);
     const breathFail = Math.random()*100 < failChance;
     breathBar.style.transition = 'width 0.8s ease-out';
     breathBar.style.width = breathFail ? '0%' : Math.round(40 + Math.random()*55) + '%';
@@ -2352,7 +2374,8 @@
     // --- defender AI: tara + mid-line cross kore na (asli rule) ---
     // nearest 2 = hunter (soja raider er pichu), baki ra cut-off position ney
     const defArr = rtMeshes(dk);
-    const defSpeed = 2.9 + defTeam.defenseStrength * 0.016;
+    const dMul = DIFF[difficulty] || DIFF.medium;
+    const defSpeed = (2.9 + defTeam.defenseStrength * 0.016) * dMul.rtDef;
     const chasers = defArr.filter(m=>m.visible && !m.userData.fallen)
       .sort((a,b)=> Math.hypot(px-a.position.x,pz-a.position.z) - Math.hypot(px-b.position.x,pz-b.position.z))
       .slice(0,2);
@@ -2391,9 +2414,9 @@
     });
 
     // --- tackle pressure: gherao hole dhora ---
-    if(nearest < GRAB_R) RT.pressure += (30 + nearCount*22) * dt;
+    if(nearest < GRAB_R) RT.pressure += (30 + nearCount*22) * dMul.rtPress * dt;
     else RT.pressure -= 34 * dt;
-    if(nearest < TAG_HARD_R) RT.pressure += 40 * dt;
+    if(nearest < TAG_HARD_R) RT.pressure += 40 * dMul.rtPress * dt;
     RT.pressure = Math.max(0, Math.min(100, RT.pressure));
     pressureBar.style.width = RT.pressure + '%';
     if(RT.pressure >= 100){ rtFinish('tackle'); return; }
@@ -2556,7 +2579,7 @@
     const raiderTeam = state.teams[raiderKey];
     const defTeam = state.teams[defKey];
     const defCountBefore = onCourtCount(defTeam);
-    const chance = moveOdds(move, raiderTeam, defTeam);
+    const chance = moveOdds(move, raiderKey, defKey);
     const roll = Math.random()*100;
     const success = !breathFail && (roll < chance);
     const isDoOrDie = raiderTeam.emptyRaidStreak >= 2;
@@ -2695,7 +2718,19 @@
 
   function aiChooseMove(defTeam){
     const eligible = bonusEligible(defTeam);
-    const weights = eligible ? {hand:40, toe:20, dodge:15, bonus:25} : {hand:55, toe:25, dodge:20, bonus:0};
+    if(difficulty === 'hard' && Math.random() < 0.75){
+      // Hard AI: best-odds move ney (panthers raids vs tigers)
+      let best = 'hand', bestOdds = -1;
+      ['hand','toe','dodge','bonus'].forEach(m=>{
+        if(m === 'bonus' && !eligible) return;
+        const o = moveOdds(m, 'panthers', 'tigers');
+        if(o > bestOdds){ bestOdds = o; best = m; }
+      });
+      return best;
+    }
+    const weights = difficulty === 'easy'
+      ? (eligible ? {hand:35, toe:12, dodge:33, bonus:20} : {hand:45, toe:15, dodge:40, bonus:0})
+      : (eligible ? {hand:40, toe:20, dodge:15, bonus:25} : {hand:55, toe:25, dodge:20, bonus:0});
     const entries = Object.entries(weights).filter(([,w])=>w>0);
     const total = entries.reduce((s,[,w])=>s+w,0);
     let r = Math.random()*total;
@@ -2943,6 +2978,20 @@
   }
   styleClassicBtn.addEventListener('click', ()=> setRaidStyle('classic'));
   styleRealBtn.addEventListener('click', ()=> setRaidStyle('real'));
+
+  // ---- Difficulty selector ----
+  function setDifficulty(dd){
+    difficulty = dd;
+    try{ localStorage.setItem('rm_diff', dd); }catch(e){}
+    el('diffEasyBtn').classList.toggle('selected', dd === 'easy');
+    el('diffMedBtn').classList.toggle('selected', dd === 'medium');
+    el('diffHardBtn').classList.toggle('selected', dd === 'hard');
+    renderScore();
+  }
+  el('diffEasyBtn').addEventListener('click', ()=> setDifficulty('easy'));
+  el('diffMedBtn').addEventListener('click', ()=> setDifficulty('medium'));
+  el('diffHardBtn').addEventListener('click', ()=> setDifficulty('hard'));
+  setDifficulty(difficulty);
 
   // ---- Start stepper (C): ① Mode → ② Style → ③ Teams ----
   let startStep = 1;
