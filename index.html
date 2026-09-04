@@ -726,7 +726,7 @@
         <button id="stepNextBtn" type="button">Next →</button>
       </div>
       <button id="startMatchBtn" class="hidden">🚩 Start Match</button>
-      <div style="font-size:0.62rem; color:var(--ink-soft); opacity:0.7; margin-top:8px;">ver 7 • notun UI</div>
+      <div style="font-size:0.62rem; color:var(--ink-soft); opacity:0.7; margin-top:8px;">ver 8 • defender AI fix</div>
     </div>
   </div>
 
@@ -2062,22 +2062,24 @@
     raiderMesh3d.userData.tackled = false;
     raiderMesh3d.visible = true;
 
-    // A couple of nearby defenders back away while you're safely chanting, then rush in if you run out of breath
+    // A couple of nearby defenders HOLD their ground (brace + press in slightly)
+    // while you're chanting — then rush in if you run out of breath
     const chantDefenders = pickVisibleMeshes(chantMeshes, Math.min(2, chantMeshes.filter(m=>m.visible).length))
       .map(m=>({ m, origZ: m.position.z }));
+    braceDefenders(chantDefenders.map(o=>o.m), true);
 
     function nudgeForward(amount){
       if(chantIsTigers){
         raiderMesh3d.position.z = Math.max(CHANT_ADVANCE_MIN_Z, raiderMesh3d.position.z - amount);
         chantDefenders.forEach(o=>{
-          const retreatFloor = o.origZ - 1.3;
-          o.m.position.z = Math.max(retreatFloor, o.m.position.z - amount*0.55);
+          const pressCeil = o.origZ + 0.6;
+          o.m.position.z = Math.min(pressCeil, o.m.position.z + amount*0.2);
         });
       } else {
         raiderMesh3d.position.z = Math.min(-CHANT_ADVANCE_MIN_Z, raiderMesh3d.position.z + amount);
         chantDefenders.forEach(o=>{
-          const retreatCeil = o.origZ + 1.3;
-          o.m.position.z = Math.min(retreatCeil, o.m.position.z + amount*0.55);
+          const pressFloor = o.origZ - 0.6;
+          o.m.position.z = Math.max(pressFloor, o.m.position.z - amount*0.2);
         });
       }
     }
@@ -2138,7 +2140,7 @@
       movesEl.classList.remove('hidden');
       el('raidTitle').textContent = 'Raiding...';
       if(!held){
-        // Breath broke — the defenders who were backing away now rush straight at the raider
+        // Breath broke — the nearby defenders rush straight at the raider
         chantDefenders.forEach(o=>{
           const targetZ = raiderMesh3d.position.z + (o.origZ > raiderMesh3d.position.z ? 0.35 : -0.35);
           tweenNumber(o.m.position.z, targetZ, 260, v=> o.m.position.z = v, ()=>{
@@ -2151,6 +2153,7 @@
         // Raid continues — let them drift back to their original spot
         chantDefenders.forEach(o=> tweenNumber(o.m.position.z, o.origZ, 300, v=> o.m.position.z = v));
       }
+      braceDefenders(chantDefenders.map(o=>o.m), false);
       onDone(!held);
     }
   }
@@ -2347,8 +2350,12 @@
     }
 
     // --- defender AI: tara + mid-line cross kore na (asli rule) ---
+    // nearest 2 = hunter (soja raider er pichu), baki ra cut-off position ney
     const defArr = rtMeshes(dk);
     const defSpeed = 2.9 + defTeam.defenseStrength * 0.016;
+    const chasers = defArr.filter(m=>m.visible && !m.userData.fallen)
+      .sort((a,b)=> Math.hypot(px-a.position.x,pz-a.position.z) - Math.hypot(px-b.position.x,pz-b.position.z))
+      .slice(0,2);
     let nearest = 1e9, nearCount = 0;
     defArr.forEach((m)=>{
       if(!m.visible || m.userData.fallen) return;
@@ -2361,13 +2368,12 @@
       // gaye brush laglei touch (khub kache ele)
       if(RT.live && dist < TAG_AUTO_R) rtTagDefender(m);
       const raiderOnTheirHalf = (dk === 'tigers' && pz > 0) || (dk === 'panthers' && pz < 0);
-      let gx, gz;
+      let gx, gz, sp;
       if(RT.live && raiderOnTheirHalf){
-        gx = px*0.85 + ud.anchor.x*0.15;
-        gz = pz*0.85 + ud.anchor.z*0.15;
-      } else { gx = ud.anchor.x; gz = ud.anchor.z; }
+        if(chasers.indexOf(m) >= 0){ gx = px; gz = pz; sp = defSpeed * 1.08; }
+        else { gx = px*0.7 + ud.anchor.x*0.3; gz = pz*0.7 + ud.anchor.z*0.3; sp = defSpeed; }
+      } else { gx = ud.anchor.x; gz = ud.anchor.z; sp = 2.0; }
       const vx = gx-mx, vz = gz-mz, vl = Math.hypot(vx,vz);
-      const sp = (RT.live && raiderOnTheirHalf) ? defSpeed : 2.0;
       if(vl > 0.05){
         const step = Math.min(vl, sp*dt);
         m.position.x = mx + vx/vl*step;
