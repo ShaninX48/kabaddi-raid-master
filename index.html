@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kabaddi: Raid Master</title>
+<meta name="description" content="Kabaddi: Raid Master — browser kabaddi game. Solo vs AI + 2-player hotseat. Download kore offline khelo.">
+<meta name="theme-color" content="#2f5d34">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./icon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Roboto+Slab:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -316,6 +321,23 @@
     color: var(--ink-soft);
     flex-shrink:0;
   }
+  .mode-row{
+    display:flex; gap:8px; justify-content:center; margin: 12px 0 4px;
+  }
+  .mode-btn{
+    flex:1; padding:10px 8px; border-radius:10px; cursor:pointer;
+    border:2px solid var(--paper-dark); background:#fff;
+    font-family:'Roboto Slab'; font-weight:700; font-size:0.82rem; color:var(--ink);
+  }
+  .mode-btn small{ display:block; font-weight:400; font-size:0.68rem; color:var(--ink-soft); }
+  .mode-btn.selected{ border-color:var(--tigers); background:#e9f4ec; box-shadow:0 0 0 2px rgba(0,106,78,0.25); }
+  .turn-badge{
+    display:inline-block; font-family:'Space Mono'; font-size:0.65rem; font-weight:700;
+    background:var(--ink); color:#fff; border-radius:20px; padding:2px 10px;
+    text-transform:uppercase; letter-spacing:1px; margin-left:8px; vertical-align:middle;
+  }
+  .turn-badge.p2{ background:var(--panthers); }
+  .turn-badge.p1{ background:var(--tigers); }
 
   .hidden{ display:none !important; }
 
@@ -434,6 +456,16 @@
   .mic-status{
     font-size:0.68rem; color:var(--ink-soft); font-family:'Space Mono';
   }
+  .mic-level-wrap{
+    margin-top:8px; background: rgba(0,0,0,0.12);
+    border-radius: 6px; height: 8px; overflow:hidden;
+  }
+  .mic-level-bar{
+    height:100%; width:0%;
+    background: linear-gradient(90deg, #7CFC9A, var(--tigers));
+    transition: width 0.1s linear;
+  }
+  .mic-level-bar.hot{ background: linear-gradient(90deg, var(--sun), var(--tigers-accent)); }
 
   /* ---------- Juice: sound toggle, confetti, shake, bumps ---------- */
   .mute-btn{
@@ -457,7 +489,14 @@
     font-size:0.95rem; cursor:pointer; line-height:1;
     display:flex; align-items:center; justify-content:center;
   }
-  .restart-btn:hover, .mute-btn:hover, .info-btn:hover{ background: rgba(0,0,0,0.16); }
+  .install-btn{
+    position:absolute; top:8px; right:50px;
+    width:30px; height:30px; border-radius:50%;
+    border: none; background: rgba(0,0,0,0.08);
+    font-size:0.95rem; cursor:pointer; line-height:1;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .restart-btn:hover, .mute-btn:hover, .info-btn:hover, .install-btn:hover{ background: rgba(0,0,0,0.16); }
   .ticket{ position:relative; }
 
   .info-modal{ text-align:left; max-height:80vh; overflow-y:auto; max-width:540px; }
@@ -528,12 +567,19 @@
   <div class="modal-overlay show" id="startOverlay">
     <div class="modal">
       <h2>🏟️ Kabaddi: Raid Master</h2>
-      <p>Name your two teams, then chant "Kabaddi!" to hold your breath on every raid.</p>
+      <p>🗣️ <b>Asli moja chant e!</b> Raid e "Kabaddi! Kabaddi!" bole breath dhoro — mic e jore bolle breath bharbe, na parle tap button backup.</p>
+      <div class="mode-row" id="modeRow">
+        <button class="mode-btn selected" id="modeAiBtn" type="button">🤖 vs AI<small>You raid, AI defends + raids back</small></button>
+        <button class="mode-btn" id="mode2pBtn" type="button">👥 2 Players<small>Same screen, pass & play — P1 vs P2</small></button>
+      </div>
       <div class="team-input-row">
         <input type="text" id="teamAInput" value="UITS" maxlength="22">
         <span class="vs-label">✕</span>
         <input type="text" id="teamBInput" value="KAIST" maxlength="22">
       </div>
+      <p style="font-size:0.78rem; color:var(--ink-soft);" id="modeHint">Solo mode: you control <b>Team 1 (P1)</b>. Team 2 raids automatically.</p>
+      <p style="font-size:0.78rem; color:var(--ink-soft);">🗣️ <b>Chant (mic) diye khelte:</b> Vercel link / <b>Chant-Khelo.bat</b> (localhost) diye kholo — mic permission Allow koro. Direct <b>index.html</b> double-click e mic block thake, tokhon tap button e khelo.</p>
+      <p style="font-size:0.78rem; color:var(--ink-soft);">📲 <b>Offline khelte chao?</b> Vercel link theke ekbar khullei phone e install hoye jabe. Ba <a href="https://github.com/ShaninX48/kabaddi-raid-master/archive/refs/heads/main.zip">ZIP download</a> kore chant er jonno <b>Chant-Khelo.bat</b>, tap diye khelte <b>index.html</b> kholo.</p>
       <p style="font-size:0.78rem; color:var(--ink-soft);">Starting the match will ask for mic permission so you can chant out loud. You can skip it and use the tap button instead.</p>
       <button id="startMatchBtn">🚩 Start Match</button>
     </div>
@@ -543,6 +589,7 @@
     <button class="mute-btn" id="muteBtn" type="button" title="Toggle sound">🔊</button>
     <button class="restart-btn" id="restartBtn" type="button" title="Start a new game">🔄</button>
     <button class="info-btn" id="infoBtn" type="button" title="Match log & stats">📊</button>
+    <button class="install-btn" id="installBtn" type="button" title="Install / download kore offline khelo">⬇️</button>
     <div class="team-block tigers">
       <div class="name" id="teamAName">Bangladesh Tigers</div>
       <div class="sub" id="tigersOnCourt">7 on court</div>
@@ -583,6 +630,8 @@
         <button class="mic-toggle" id="micToggleBtn" type="button">🎤 Enable Mic</button>
         <span class="mic-status" id="micStatus"></span>
       </div>
+      <div class="mic-level-wrap" title="Mic level — jore chant korle bar uthbe"><div class="mic-level-bar" id="micLevelBar"></div></div>
+      <div class="chant-hint">🗣️ Jore "Kabaddi! Kabaddi!" bolo — mic bar uthlei breath bharche</div>
     </div>
     <div class="moves" id="moves">
       <button class="move-btn" data-move="hand">
@@ -643,7 +692,8 @@
     </div>
   </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="./three.min.js"></script>
+<script>if(typeof THREE==='undefined'){document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');}</script>
 <script>
 (function(){
   const TIGER_NAMES = ['Rafiq','Karim','Sohel','Jashim','Nayeem','Habib','Farid'];
@@ -662,11 +712,20 @@
   }
 
   let state;
-  function freshState(nameA, nameB){
+  let selectedMode = 'ai'; // 'ai' = solo vs AI, '2p' = local multiplayer hotseat
+  function getRaiderKey(){ return state.turn === 'player' ? 'tigers' : 'panthers'; }
+  function getDefKey(){ return state.turn === 'player' ? 'panthers' : 'tigers'; }
+  function isHumanTurn(){ return state.mode === '2p' || state.turn === 'player'; }
+  function turnLabel(){
+    if(state.mode === '2p') return state.turn === 'player' ? 'P1' : 'P2';
+    return state.turn === 'player' ? 'YOU' : 'AI';
+  }
+  function freshState(nameA, nameB, mode){
     state = {
       half:1,
       pairCount:0,
-      turn:'player', // whose raid is next
+      turn:'player', // whose raid is next ('player'=tigers, 'ai'=panthers)
+      mode: mode || selectedMode || 'ai',
       resolving:false,
       matchOver:false,
       goldenRaid:false,
@@ -1123,55 +1182,96 @@
     head.position.y = 0.8;
     group.add(head);
 
+    // hair cap
+    const hair = new THREE.Mesh(new THREE.SphereGeometry(0.125, 8, 8), new THREE.MeshStandardMaterial({color:0x1c1c1c, roughness:0.95}));
+    hair.position.y = 0.845;
+    hair.scale.set(1, 0.7, 1);
+    group.add(hair);
+
     group.userData.armL = armL;
     group.userData.armR = armR;
     group.userData.cheerPhase = Math.random() * Math.PI * 2;
     return group;
   }
 
-  function createPlayerMesh3d(colorHex){
+  const SKIN_TONES = [0xf0c9a0, 0xdba57a, 0xc68a5a, 0x9a6538];
+  const HAIR_COLORS = [0x141414, 0x2e1c0e, 0x4a2c12];
+
+  // Realistic humanoid player: shoes, jointed legs, shorts, jersey torso,
+  // jointed arms with hands, neck, head with face + hair.
+  // Model faces local +Z (eyes at +Z). Pass facingY = Math.PI to face -Z.
+  // armL/armR/legL/legR are pivot Groups (shoulder/hip) so run/brace/cheer animations swing naturally.
+  function createPlayerMesh3d(colorHex, facingY){
     const group = new THREE.Group();
-    const bodyMat = new THREE.MeshStandardMaterial({color: colorHex, roughness:0.7});
-    const skinMat = new THREE.MeshStandardMaterial({color:0xf0c9a0, roughness:0.8});
+    const bodyMat = new THREE.MeshStandardMaterial({color: colorHex, roughness:0.65});
+    const skinMat = new THREE.MeshStandardMaterial({color: SKIN_TONES[Math.floor(Math.random()*SKIN_TONES.length)], roughness:0.75});
+    const hairMat = new THREE.MeshStandardMaterial({color: HAIR_COLORS[Math.floor(Math.random()*HAIR_COLORS.length)], roughness:0.95});
+    const shortsMat = new THREE.MeshStandardMaterial({color:0xf4ecdd, roughness:0.8});
+    const shoeMat = new THREE.MeshStandardMaterial({color:0x232323, roughness:0.55});
+    const darkMat = new THREE.MeshStandardMaterial({color:0x111111, roughness:0.4});
 
-    // legs (slightly apart, athletic stance)
-    const legGeo = new THREE.CylinderGeometry(0.075, 0.09, 0.42, 10);
-    const legL = new THREE.Mesh(legGeo, bodyMat);
-    legL.position.set(-0.11, 0.21, 0);
-    legL.castShadow = true;
-    group.add(legL);
-    const legR = new THREE.Mesh(legGeo, bodyMat);
-    legR.position.set(0.11, 0.21, 0);
-    legR.castShadow = true;
-    group.add(legR);
+    function part(geo, mat, x, y, z){
+      const m = new THREE.Mesh(geo, mat);
+      m.position.set(x, y, z);
+      m.castShadow = true;
+      group.add(m);
+      return m;
+    }
 
-    // torso (tapered, wider at hips)
-    const torsoGeo = new THREE.CylinderGeometry(0.16, 0.2, 0.42, 12);
-    const torso = new THREE.Mesh(torsoGeo, bodyMat);
-    torso.position.y = 0.63;
-    torso.castShadow = true;
-    group.add(torso);
+    // shoes
+    part(new THREE.BoxGeometry(0.12, 0.09, 0.27), shoeMat, -0.11, 0.045, 0.04);
+    part(new THREE.BoxGeometry(0.12, 0.09, 0.27), shoeMat, 0.11, 0.045, 0.04);
 
-    // arms (angled outward, ready-to-tag pose)
-    const armGeo = new THREE.CylinderGeometry(0.055, 0.07, 0.36, 8);
-    const armL = new THREE.Mesh(armGeo, bodyMat);
-    armL.position.set(-0.28, 0.66, 0);
-    armL.rotation.z = 0.5;
-    armL.castShadow = true;
-    group.add(armL);
-    const armR = new THREE.Mesh(armGeo, bodyMat);
-    armR.position.set(0.28, 0.66, 0);
-    armR.rotation.z = -0.5;
-    armR.castShadow = true;
-    group.add(armR);
+    // legs (hip-pivot groups)
+    function makeLeg(side){
+      const g = new THREE.Group();
+      g.position.set(0.11*side, 0.88, 0);
+      const thigh = new THREE.Mesh(new THREE.CylinderGeometry(0.078, 0.066, 0.34, 10), skinMat);
+      thigh.position.y = -0.17; thigh.castShadow = true; g.add(thigh);
+      const knee = new THREE.Mesh(new THREE.SphereGeometry(0.066, 8, 8), skinMat);
+      knee.position.y = -0.35; g.add(knee);
+      const shin = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.054, 0.34, 10), skinMat);
+      shin.position.y = -0.52; shin.castShadow = true; g.add(shin);
+      group.add(g);
+      return g;
+    }
+    const legL = makeLeg(-1), legR = makeLeg(1);
 
-    // head
-    const headGeo = new THREE.SphereGeometry(0.15, 14, 14);
-    const head = new THREE.Mesh(headGeo, skinMat);
-    head.position.y = 1.0;
-    head.castShadow = true;
-    group.add(head);
+    // shorts
+    part(new THREE.CylinderGeometry(0.20, 0.235, 0.24, 12), shortsMat, 0, 0.97, 0);
 
+    // jersey torso (tapered, wider at chest) + chest stripe + shoulders
+    part(new THREE.CylinderGeometry(0.215, 0.185, 0.52, 14), bodyMat, 0, 1.33, 0);
+    const stripe = new THREE.Mesh(new THREE.TorusGeometry(0.205, 0.018, 8, 20), shortsMat);
+    stripe.rotation.x = Math.PI/2; stripe.position.y = 1.43; group.add(stripe);
+    part(new THREE.SphereGeometry(0.088, 10, 10), bodyMat, -0.24, 1.56, 0);
+    part(new THREE.SphereGeometry(0.088, 10, 10), bodyMat, 0.24, 1.56, 0);
+
+    // arms (shoulder-pivot groups: sleeve + forearm + hand)
+    function makeArm(side){
+      const g = new THREE.Group();
+      g.position.set(0.265*side, 1.56, 0);
+      const sleeve = new THREE.Mesh(new THREE.CylinderGeometry(0.072, 0.062, 0.24, 10), bodyMat);
+      sleeve.position.y = -0.12; sleeve.castShadow = true; g.add(sleeve);
+      const fore = new THREE.Mesh(new THREE.CylinderGeometry(0.056, 0.05, 0.26, 10), skinMat);
+      fore.position.y = -0.36; fore.castShadow = true; g.add(fore);
+      const hand = new THREE.Mesh(new THREE.SphereGeometry(0.063, 10, 10), skinMat);
+      hand.position.y = -0.53; hand.castShadow = true; g.add(hand);
+      g.rotation.z = side * -0.12;
+      group.add(g);
+      return g;
+    }
+    const armL = makeArm(-1), armR = makeArm(1);
+
+    // neck + head + hair + face
+    part(new THREE.CylinderGeometry(0.055, 0.062, 0.09, 10), skinMat, 0, 1.63, 0);
+    part(new THREE.SphereGeometry(0.145, 16, 16), skinMat, 0, 1.79, 0);
+    const hair = part(new THREE.SphereGeometry(0.15, 14, 14), hairMat, 0, 1.845, -0.028);
+    hair.scale.set(1, 0.72, 1);
+    part(new THREE.SphereGeometry(0.022, 8, 8), darkMat, -0.056, 1.81, 0.128);
+    part(new THREE.SphereGeometry(0.022, 8, 8), darkMat, 0.056, 1.81, 0.128);
+
+    group.rotation.y = facingY || 0;
     group.userData.bodyMat = bodyMat;
     group.userData.legL = legL;
     group.userData.legR = legR;
@@ -1293,13 +1393,13 @@
     });
 
     TIGER_NAMES.forEach((name,i)=>{
-      const m = createPlayerMesh3d(TIGERS_HEX);
+      const m = createPlayerMesh3d(TIGERS_HEX, Math.PI); // face the enemy (-Z)
       m.position.set((i-3)*0.82, 0, 4.0);
       scene3d.add(m);
       tigersMeshes.push(m);
     });
     PANTHER_NAMES.forEach((name,i)=>{
-      const m = createPlayerMesh3d(PANTHERS_HEX);
+      const m = createPlayerMesh3d(PANTHERS_HEX, 0); // face the enemy (+Z)
       m.position.set((i-3)*0.82, 0, -4.0);
       scene3d.add(m);
       panthersMeshes.push(m);
@@ -1438,6 +1538,18 @@
     return name;
   }
 
+  // Asli rule: proti tag/tackle point e 1 jon revive (Toe +2 = 2 jon, Super Tackle +2 = 2 jon).
+  // Bonus/all-out point e revive hoy na (all-out emnitei full team revive kore).
+  function reviveMany(team, count){
+    const names = [];
+    for(let i=0;i<count;i++){
+      const n = revive(team);
+      if(!n) break;
+      names.push(n);
+    }
+    return names;
+  }
+
   function checkAllOut(defendingKey, raidingKey){
     const defTeam = state.teams[defendingKey];
     if(onCourtCount(defTeam)===0){
@@ -1513,7 +1625,7 @@
     }
     const currentZ = raiderMesh3d.position.z;
     const currentX = raiderMesh3d.position.x;
-    raiderMesh3d.rotation.set(0,0,0);
+    raiderMesh3d.rotation.set(0, isPanthersRaiding ? 0 : Math.PI, 0); // face the enemy while raiding
     raiderMesh3d.scale.set(1,1,1);
     raiderMesh3d.userData.tackled = false;
     raiderMesh3d.visible = true;
@@ -1537,7 +1649,7 @@
         setTimeout(()=>{
           tweenNumber(1, 0, 320, v=>{ raiderMesh3d.scale.set(v,v,v); }, ()=>{
             raiderMesh3d.visible = false;
-            raiderMesh3d.rotation.set(0,0,0);
+            raiderMesh3d.rotation.set(0, isPanthersRaiding ? 0 : Math.PI, 0);
             lungers.forEach(o=> tweenNumber(1, 0, 260, v=>{ o.m.position.x = o.x + o.dx*v; o.m.position.z = o.z + o.dz*v; }));
             braceDefenders(reactorMeshes, false);
             cb();
@@ -1563,6 +1675,7 @@
     const textEl = el('chantText');
     const btn = el('chantBtn');
     const miniBar = el('miniBreathBar');
+    const levelBar = el('micLevelBar');
     challengeEl.classList.remove('hidden');
     movesEl.classList.add('hidden');
     sfx.whistle();
@@ -1572,7 +1685,7 @@
     const tickMs = 130;
     const totalTicks = 22;
     let ticks = 0;
-    const MIC_VOICE_THRESHOLD = 0.045;
+    const MIC_VOICE_THRESHOLD = 0.035;
     let lastMicFeedback = 0;
 
     breathBar.style.transition = 'width 0.1s linear';
@@ -1581,23 +1694,36 @@
     if(micEnabled) micStatusEl.textContent = '🎤 Listening — chant "Kabaddi!" loudly!';
 
     // Show the raider right away at the baulk line so chanting/tapping visibly advances them
-    raiderMesh3d.userData.bodyMat.color.setHex(TIGERS_HEX);
-    raiderMesh3d.position.set(0, 0, TIGERS_BAULK_Z);
-    raiderMesh3d.rotation.set(0,0,0);
+    const chantRaiderKey = getRaiderKey();
+    const chantDefKey = getDefKey();
+    const chantIsTigers = chantRaiderKey === 'tigers';
+    const chantStartZ = chantIsTigers ? TIGERS_BAULK_Z : PANTHERS_BAULK_Z;
+    const chantMeshes = chantDefKey === 'tigers' ? tigersMeshes : panthersMeshes;
+    raiderMesh3d.userData.bodyMat.color.setHex(chantIsTigers ? TIGERS_HEX : PANTHERS_HEX);
+    raiderMesh3d.position.set(0, 0, chantStartZ);
+    raiderMesh3d.rotation.set(0, chantIsTigers ? Math.PI : 0, 0);
     raiderMesh3d.scale.set(1,1,1);
     raiderMesh3d.userData.tackled = false;
     raiderMesh3d.visible = true;
 
     // A couple of nearby defenders back away while you're safely chanting, then rush in if you run out of breath
-    const chantDefenders = pickVisibleMeshes(panthersMeshes, Math.min(2, panthersMeshes.filter(m=>m.visible).length))
+    const chantDefenders = pickVisibleMeshes(chantMeshes, Math.min(2, chantMeshes.filter(m=>m.visible).length))
       .map(m=>({ m, origZ: m.position.z }));
 
     function nudgeForward(amount){
-      raiderMesh3d.position.z = Math.max(CHANT_ADVANCE_MIN_Z, raiderMesh3d.position.z - amount);
-      chantDefenders.forEach(o=>{
-        const retreatFloor = o.origZ - 1.3;
-        o.m.position.z = Math.max(retreatFloor, o.m.position.z - amount*0.55);
-      });
+      if(chantIsTigers){
+        raiderMesh3d.position.z = Math.max(CHANT_ADVANCE_MIN_Z, raiderMesh3d.position.z - amount);
+        chantDefenders.forEach(o=>{
+          const retreatFloor = o.origZ - 1.3;
+          o.m.position.z = Math.max(retreatFloor, o.m.position.z - amount*0.55);
+        });
+      } else {
+        raiderMesh3d.position.z = Math.min(-CHANT_ADVANCE_MIN_Z, raiderMesh3d.position.z + amount);
+        chantDefenders.forEach(o=>{
+          const retreatCeil = o.origZ + 1.3;
+          o.m.position.z = Math.min(retreatCeil, o.m.position.z + amount*0.55);
+        });
+      }
     }
 
     const timer = setInterval(()=>{
@@ -1605,6 +1731,10 @@
 
       if(micEnabled){
         const level = getMicLevel();
+        if(levelBar){
+          levelBar.style.width = Math.min(100, Math.round(level * 400)) + '%';
+          levelBar.classList.toggle('hot', level > MIC_VOICE_THRESHOLD);
+        }
         if(level > MIC_VOICE_THRESHOLD){
           breath = Math.min(100, breath + 16);
           nudgeForward(0.16);
@@ -1646,6 +1776,7 @@
       clearInterval(timer);
       btn.onclick = null;
       activeTapFn = null;
+      if(levelBar){ levelBar.style.width = '0%'; levelBar.classList.remove('hot'); }
       if(micEnabled) micStatusEl.textContent = 'Chant or shout "Kabaddi!" loudly during your raid.';
       challengeEl.classList.add('hidden');
       movesEl.classList.remove('hidden');
@@ -1669,12 +1800,14 @@
   }
 
   function startPlayerRaid(move){
-    if(state.resolving || state.matchOver || state.turn !== 'player') return;
+    if(state.resolving || state.matchOver || !isHumanTurn()) return;
     ensureAudio();
     state.resolving = true;
     setButtonsEnabled(false);
     nextBtn.classList.add('hidden');
-    el('raidTitle').textContent = 'Hold your breath — keep chanting!';
+    el('raidTitle').textContent = state.mode === '2p'
+      ? state.teams[getRaiderKey()].name + ' — hold your breath, keep chanting!'
+      : 'Hold your breath — keep chanting!';
     startChantChallenge(move, (breathFail)=> performRaid(move, breathFail));
   }
 
@@ -1740,19 +1873,23 @@
           const superTackle = defCountBefore <= 3;
           defTeam.score.tackle += superTackle ? 2 : 1;
           msg = doOrDieTag + raiderLabel + ' — dom bhenge gyeche! Lost the chant and the breath broke mid-raid. ' + (superTackle? 'SUPER TACKLE! +2 to ' : '+1 tackle point to ') + defTeam.name + '.';
-          revive(defTeam);
+          const outRaider = markOut(raiderTeam, 1)[0];
+          msg += ' Raider ' + (outRaider || 'out') + ' is OUT.';
+          reviveMany(defTeam, superTackle ? 2 : 1);
         } else if(move === 'hand'){
           if(success){
             const removed = applyOut(defTeam, targetPlayers);
             raiderTeam.score.raid += 1;
             raiderScored = true;
             msg = doOrDieTag + raiderLabel + ' — Hand Touch ✅ tags ' + (removed[0]||'a defender') + '. +1 point.';
-            revive(raiderTeam);
+            reviveMany(raiderTeam, 1);
           } else {
             const superTackle = defCountBefore <= 3;
             defTeam.score.tackle += superTackle ? 2 : 1;
             msg = doOrDieTag + raiderLabel + ' — Hand Touch ❌ caught! ' + (superTackle? 'SUPER TACKLE! +2 to ' : '+1 tackle point to ') + defTeam.name + '.';
-            revive(defTeam);
+            const outRaider = markOut(raiderTeam, 1)[0];
+            msg += ' Raider ' + (outRaider || 'out') + ' is OUT.';
+            reviveMany(defTeam, superTackle ? 2 : 1);
           }
         } else if(move === 'toe'){
           if(success){
@@ -1760,12 +1897,14 @@
             raiderTeam.score.raid += removed.length;
             raiderScored = true;
             msg = doOrDieTag + raiderLabel + ' — Toe Touch ✅ tags ' + removed.join(' & ') + '. +' + removed.length + ' points.';
-            revive(raiderTeam);
+            reviveMany(raiderTeam, removed.length);
           } else {
             const superTackle = defCountBefore <= 3;
             defTeam.score.tackle += superTackle ? 2 : 1;
             msg = doOrDieTag + raiderLabel + ' — Toe Touch ❌ caught reaching too far! ' + (superTackle? 'SUPER TACKLE! +2 to ' : '+1 tackle point to ') + defTeam.name + '.';
-            revive(defTeam);
+            const outRaider = markOut(raiderTeam, 1)[0];
+            msg += ' Raider ' + (outRaider || 'out') + ' is OUT.';
+            reviveMany(defTeam, superTackle ? 2 : 1);
           }
         } else if(move === 'dodge'){
           if(success){
@@ -1773,7 +1912,9 @@
               const superTackle = defCountBefore <= 3;
               defTeam.score.tackle += superTackle ? 2 : 1;
               msg = doOrDieTag + raiderLabel + ' — slipped through empty-handed, but a do-or-die raid MUST score. Ruled OUT! ' + (superTackle? 'SUPER TACKLE! +2 to ' : '+1 tackle point to ') + defTeam.name + '.';
-              revive(defTeam);
+              const outRaider = markOut(raiderTeam, 1)[0];
+              msg += ' Raider ' + (outRaider || 'out') + ' is OUT.';
+              reviveMany(defTeam, superTackle ? 2 : 1);
             } else {
               msg = raiderLabel + ' — Dodge & Dash ✅ slips through clean. Empty raid, no points.';
             }
@@ -1781,19 +1922,22 @@
             const superTackle = defCountBefore <= 3;
             defTeam.score.tackle += superTackle ? 2 : 1;
             msg = doOrDieTag + raiderLabel + ' — Dodge & Dash ❌ boxed in and tackled! ' + (superTackle? 'SUPER TACKLE! +2 to ' : '+1 tackle point to ') + defTeam.name + '.';
-            revive(defTeam);
+            const outRaider = markOut(raiderTeam, 1)[0];
+            msg += ' Raider ' + (outRaider || 'out') + ' is OUT.';
+            reviveMany(defTeam, superTackle ? 2 : 1);
           }
         } else if(move === 'bonus'){
           if(success){
             raiderTeam.score.bonus += 1;
             raiderScored = true;
-            msg = doOrDieTag + raiderLabel + ' — Bonus Raid ✅ crosses the bonus line! +1 bonus point.';
-            revive(raiderTeam);
+            msg = doOrDieTag + raiderLabel + ' — Bonus Raid ✅ crosses the bonus line! +1 bonus point (no revival on bonus).';
           } else {
             const superTackle = defCountBefore <= 3;
             defTeam.score.tackle += superTackle ? 2 : 1;
             msg = doOrDieTag + raiderLabel + ' — Bonus Raid ❌ caught reaching for the line! ' + (superTackle? 'SUPER TACKLE! +2 to ' : '+1 tackle point to ') + defTeam.name + '.';
-            revive(defTeam);
+            const outRaider = markOut(raiderTeam, 1)[0];
+            msg += ' Raider ' + (outRaider || 'out') + ' is OUT.';
+            reviveMany(defTeam, superTackle ? 2 : 1);
           }
         }
 
@@ -1811,6 +1955,7 @@
 
         log(msg, raiderScored);
         checkAllOut(defKey, raiderKey);
+        checkAllOut(raiderKey, defKey); // raider side o all-out hote pare (barbar fail korle)
         renderTokens();
         renderScore();
         advanceTurn();
@@ -1828,41 +1973,63 @@
     return 'hand';
   }
 
+  function raidTitleForTurn(prefix){
+    const rk = getRaiderKey();
+    const team = state.teams[rk];
+    const isDoOrDie = team.emptyRaidStreak >= 2;
+    const warn = isDoOrDie ? '⚠️ Do-or-Die! ' : '';
+    const who = state.mode === '2p'
+      ? (state.turn === 'player' ? 'P1 · ' : 'P2 · ') + team.name
+      : (state.turn === 'player' ? team.name + ' (You)' : team.name + ' (AI)');
+    el('raidTitle').innerHTML = warn + who + ' — choose a move <span class="turn-badge ' + (state.turn === 'player' ? 'p1' : 'p2') + '">' + turnLabel() + '</span>';
+    el('raidPanel').classList.toggle('do-or-die', isDoOrDie);
+  }
+
+  function triggerAiRaidWithDelay(){
+    setButtonsEnabled(false);
+    setTimeout(()=>{
+      if(state.matchOver) return;
+      const atk = state.teams[getDefKey()]; // defenders of the AI raid = human team, AI picks vs them
+      const move = aiChooseMove(atk);
+      aiRaid(move);
+    }, 900);
+  }
+
   function advanceTurn(){
     state.resolving = false;
 
     if(state.goldenRaid){
       if(state.lastRaidScored){
-        const raiderKey = state.turn === 'player' ? 'tigers' : 'panthers';
-        declareGoldenWinner(raiderKey);
+        const rk = state.turn === 'player' ? 'tigers' : 'panthers';
+        declareGoldenWinner(rk);
         return;
       }
       state.turn = state.turn === 'player' ? 'ai' : 'player';
-      if(state.turn === 'player'){
-        el('raidTitle').textContent = '🥇 GOLDEN RAID — your turn, score to win!';
+      if(isHumanTurn()){
+        el('raidTitle').innerHTML = '🥇 GOLDEN RAID — ' + state.teams[getRaiderKey()].name + ' (' + turnLabel() + '), score to win!';
         updateOddsDisplay();
         setButtonsEnabled(true);
       } else {
-        el('raidTitle').textContent = '🥇 GOLDEN RAID — Panthers raiding...';
-        setButtonsEnabled(false);
-        setTimeout(()=>{
-          const move = aiChooseMove(state.teams.tigers);
-          aiRaid(move);
-        }, 900);
+        el('raidTitle').textContent = '🥇 GOLDEN RAID — ' + state.teams[getRaiderKey()].name + ' raiding...';
+        triggerAiRaidWithDelay();
       }
       return;
     }
 
     if(state.turn === 'player'){
-      // it's now AI's raid, auto-trigger after a short pause
+      // tigers just raided, now panthers raid
       state.turn = 'ai';
-      const warnAi = state.teams.panthers.emptyRaidStreak >= 2 ? '⚠️ Do-or-Die for Panthers! ' : '';
-      el('raidTitle').textContent = warnAi + "Rajshahi Panthers are raiding...";
-      setButtonsEnabled(false);
-      setTimeout(()=>{
-        const move = aiChooseMove(state.teams.tigers);
-        aiRaid(move);
-      }, 900);
+      if(state.mode === '2p'){
+        updateOddsDisplay();
+        setButtonsEnabled(true);
+        raidTitleForTurn();
+        log('🔄 ' + state.teams.panthers.name + ' (P2) — device P2 ke dao, then move choose koro.', false);
+      } else {
+        const warnAi = state.teams.panthers.emptyRaidStreak >= 2 ? '⚠️ Do-or-Die for ' + state.teams.panthers.name + '! ' : '';
+        el('raidTitle').textContent = warnAi + state.teams.panthers.name + ' are raiding...';
+        el('raidPanel').classList.toggle('do-or-die', state.teams.panthers.emptyRaidStreak >= 2);
+        triggerAiRaidWithDelay();
+      }
     } else {
       state.pairCount += 1;
       if(state.pairCount >= RAIDS_PER_HALF_PER_TEAM){
@@ -1877,12 +2044,14 @@
         }
       }
       state.turn = 'player';
-      const isDoOrDieNow = state.teams.tigers.emptyRaidStreak >= 2;
-      const warn = isDoOrDieNow ? '⚠️ Do-or-Die Raid! ' : '';
-      el('raidTitle').textContent = warn + 'Your Raid — choose a move';
-      el('raidPanel').classList.toggle('do-or-die', isDoOrDieNow);
       updateOddsDisplay();
       setButtonsEnabled(true);
+      if(state.mode === '2p'){
+        raidTitleForTurn();
+        if(state.pairCount === 0) log('🔄 ' + state.teams.tigers.name + ' (P1) — device P1 ke dao.', false);
+      } else {
+        raidTitleForTurn();
+      }
       renderScore();
     }
   }
@@ -1893,15 +2062,15 @@
     sfx.goldenSting();
     el('ticketBar').classList.add('golden');
     state.turn = Math.random() < 0.5 ? 'player' : 'ai';
-    if(state.turn === 'player'){
-      el('raidTitle').textContent = '🥇 GOLDEN RAID — score to win!';
+    if(isHumanTurn()){
+      el('raidTitle').innerHTML = '🥇 GOLDEN RAID — ' + state.teams[getRaiderKey()].name + ' (' + turnLabel() + '), score to win!';
       updateOddsDisplay();
       setButtonsEnabled(true);
     } else {
-      el('raidTitle').textContent = '🥇 GOLDEN RAID — Panthers raiding...';
+      el('raidTitle').textContent = '🥇 GOLDEN RAID — ' + state.teams[getRaiderKey()].name + ' raiding...';
       setButtonsEnabled(false);
       setTimeout(()=>{
-        const move = aiChooseMove(state.teams.tigers);
+        const move = aiChooseMove(state.teams[getDefKey()]);
         aiRaid(move);
       }, 900);
     }
@@ -1950,7 +2119,7 @@
     btn.addEventListener('click', ()=> startPlayerRaid(btn.dataset.move));
   });
 
-  function beginMatch(nameA, nameB){
+  function beginMatch(nameA, nameB, mode){
     const finalA = (nameA && nameA.trim()) ? nameA.trim() : 'Bangladesh Tigers';
     const finalB = (nameB && nameB.trim()) ? nameB.trim() : 'Rajshahi Panthers';
     el('endOverlay').classList.remove('show');
@@ -1958,15 +2127,18 @@
     prevScoreTotal = 0;
     el('raidPanel').classList.remove('do-or-die');
     el('ticketBar').classList.remove('golden');
-    freshState(finalA, finalB);
+    selectedMode = mode || selectedMode || 'ai';
+    freshState(finalA, finalB, selectedMode);
     el('teamAName').textContent = finalA;
     el('teamBName').textContent = finalB;
     renderTokens();
     renderScore();
     updateOddsDisplay();
     setButtonsEnabled(true);
-    el('raidTitle').textContent = 'Your Raid — choose a move';
-    log('🏟️ ' + finalA + ' vs ' + finalB + ' — match begins! ' + finalA + ' raid first.', true);
+    raidTitleForTurn();
+    const modeText = state.mode === '2p' ? '👥 LOCAL MULTIPLAYER (P1 vs P2, pass & play). ' : '🤖 SOLO vs AI. ';
+    log('🏟️ ' + finalA + ' vs ' + finalB + ' — match begins! ' + modeText + finalA + ' raid first.', true);
+    if(state.mode === '2p') log('📱 P1 device niye raid koro, then P2 ke dao. Keyboard: 1-4 = move.', false);
   }
 
   function openStartScreen(){
@@ -1997,10 +2169,41 @@
   el('startMatchBtn').addEventListener('click', function(){
     const nameA = el('teamAInput').value;
     const nameB = el('teamBInput').value;
-    beginMatch(nameA, nameB);
+    beginMatch(nameA, nameB, selectedMode);
     el('startOverlay').classList.remove('show');
     ensureAudio();
     if(!micEnabled){ enableMic(); }
+  });
+
+  // ---- Mode selector (solo vs AI / local 2P) ----
+  const modeAiBtn = el('modeAiBtn'), mode2pBtn = el('mode2pBtn'), modeHint = el('modeHint');
+  function setSelectedMode(m){
+    selectedMode = m;
+    modeAiBtn.classList.toggle('selected', m === 'ai');
+    mode2pBtn.classList.toggle('selected', m === '2p');
+    modeHint.innerHTML = m === '2p'
+      ? 'Multiplayer: <b>P1 controls Team 1</b>, <b>P2 controls Team 2</b>. Same screen e pass kore khelo.'
+      : 'Solo mode: you control <b>Team 1 (P1)</b>. Team 2 raids automatically.';
+  }
+  modeAiBtn.addEventListener('click', ()=> setSelectedMode('ai'));
+  mode2pBtn.addEventListener('click', ()=> setSelectedMode('2p'));
+
+  // ---- Keyboard shortcuts: 1-4 = moves (great for hotseat multiplayer) ----
+  document.addEventListener('keydown', (e)=>{
+    if(!el('startOverlay').classList.contains('show') && !state.matchOver && isHumanTurn() && !state.resolving){
+      const map = {'1':'hand','2':'toe','3':'dodge','4':'bonus'};
+      const mv = map[e.key];
+      if(mv){
+        const btn = movesEl.querySelector('[data-move="' + mv + '"]');
+        if(btn && !btn.disabled) startPlayerRaid(mv);
+      } else if(e.key === ' ' && activeTapFn){
+        e.preventDefault();
+        activeTapFn();
+      }
+    } else if(e.key === ' ' && activeTapFn){
+      e.preventDefault();
+      activeTapFn();
+    }
   });
 
   // init
@@ -2009,6 +2212,34 @@
   renderScore();
   updateOddsDisplay();
   log('🏟️ Match begins on the village court. Bangladesh Tigers raid first.', true);
+})();
+</script>
+<script>
+// Offline + install support (PWA). file:// te service worker cholbe na — eta normal,
+// tokhon game tao direct cholbe karon three.min.js ekhon local file.
+(function(){
+  if('serviceWorker' in navigator && (location.protocol === 'https:' || location.protocol === 'http:')){
+    window.addEventListener('load', function(){
+      navigator.serviceWorker.register('./sw.js').catch(function(){});
+    });
+  }
+  var deferredPrompt = null;
+  var installBtn = document.getElementById('installBtn');
+  window.addEventListener('beforeinstallprompt', function(e){
+    e.preventDefault();
+    deferredPrompt = e;
+    if(installBtn) installBtn.textContent = '📲';
+  });
+  if(installBtn){
+    installBtn.addEventListener('click', function(){
+      if(deferredPrompt){
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(function(){ deferredPrompt = null; });
+      } else {
+        alert('Offline khelar 2 ta upay:\n\n1) Phone/PC browser e Vercel link theke kholo → browser menu → "Add to Home Screen / Install". Ekbar khullei net chara cholbe.\n\n2) GitHub theke ZIP download kore index.html double-click koro.');
+      }
+    });
+  }
 })();
 </script>
 </body>

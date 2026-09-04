@@ -30,6 +30,13 @@ No install, no build step — it's one `index.html` file.
 3. Score touch/bonus points, avoid getting tackled, and watch for **Do-or-Die** and **Golden Raid** moments.
 4. First to the highest score after 2 halves (or the Golden Raid sudden-death) wins.
 
+## ⬇️ Download kore offline khelo
+
+1. **ZIP download:** [main.zip](https://github.com/ShaninX48/kabaddi-raid-master/archive/refs/heads/main.zip) download kore unzip koro.
+2. **🗣️ Chant (mic) soho khelte — etai asli moja:** folder er `Chant-Khelo.bat` e double-click koro (Node.js lage). Eta `http://localhost:8080` e game khulbe — localhost secure context, tai **mic chant offline eo cholbe**. Mic permission Allow koro, raid e jore "Kabaddi! Kabaddi!" bolo — sobuj mic-bar uthlei breath bharche.
+3. **Tap diye khelte:** sudhu `index.html` double-click korlei hobe (net lage na), kintu `file://` te browser mic block kore — tokhon `🗣️ Kabaddi!` button / Space diye breath dhoro.
+4. **Phone e install:** Vercel link (e.g. `kabaddi-raid-master.vercel.app`) theke ekbar kholo → browser menu → **Add to Home Screen / Install**. Porer bar net charai app er moto khulbe (mic soho, karon origin HTTPS).
+
 ## 🚀 Running It
 
 **Locally:** just double-click `index.html` and it opens in your browser.

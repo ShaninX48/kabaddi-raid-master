@@ -33,13 +33,13 @@ This is what separates Kabaddi from every other sport: **you can't inhale.**
 
 - 🖐️ **Touch point** — +1 per defender you tag.
 - ⭐ **Bonus point** — +1 for crossing the bonus line and making it home.
-- 🛑 **Tackle point** — the defense earns +1 whenever a raider gets caught, boxed in, or runs out of breath.
+- 🛑 **Tackle point** — the defense earns +1 whenever a raider gets caught, boxed in, or runs out of breath — and the **raider is OUT** (goes to the bench).
 - 💥 **Super Tackle** — if the defense is down to **3 players or fewer** and still manages a tackle, they earn a heroic **+2** instead of +1.
 - 🎉 **ALL OUT (Lona)** — wipe out an entire 7-player team in one go, and their rivals score a massive **+2 bonus** — plus the whole squad gets revived on the spot.
 
 ## 🔁 Revival — Nobody Stays Down Forever
 
-- Every single point scored (by either side) brings **one benched player back onto the court** for the scoring team — first one out, first one back in.
+- Every **touch/tackle point** scored revives that many benched players for the scoring team (Toe Touch +2 = 2 revived, Super Tackle +2 = 2 revived) — first one out, first one back in. **Bonus points do not revive anyone.**
 - Momentum swings fast. A team that looked finished can claw its way back with one good raid.
 
 ## ⚠️ Do-or-Die — No More Playing It Safe

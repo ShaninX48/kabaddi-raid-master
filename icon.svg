@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="110" fill="#2f5d34"/>
+  <ellipse cx="256" cy="300" rx="150" ry="105" fill="#ab7649"/>
+  <ellipse cx="256" cy="300" rx="150" ry="105" fill="none" stroke="#f4ecdd" stroke-width="14"/>
+  <line x1="106" y1="300" x2="406" y2="300" stroke="#f4ecdd" stroke-width="10"/>
+  <text x="256" y="200" font-size="120" text-anchor="middle">🏟️</text>
+  <text x="256" y="360" font-family="sans-serif" font-weight="900" font-size="72" text-anchor="middle" fill="#f4ecdd">KABADDI</text>
+</svg>
