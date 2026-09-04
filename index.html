@@ -586,7 +586,7 @@
   }
   .menu-btn:hover{ background:rgba(0,0,0,0.16); }
   .menu-drop{
-    position:absolute; top:46px; right:10px; z-index:60;
+    position:fixed; z-index:60;
     background:var(--paper); border-radius:12px; overflow:hidden;
     box-shadow:0 10px 24px rgba(0,0,0,0.35);
     min-width:200px; border:2px solid var(--paper-dark);
@@ -730,7 +730,7 @@
         <button id="stepNextBtn" type="button">Next →</button>
       </div>
       <button id="startMatchBtn" class="hidden">🚩 Start Match</button>
-      <div style="font-size:0.62rem; color:var(--ink-soft); opacity:0.7; margin-top:8px;">ver 10 • bench overlap fix</div>
+      <div style="font-size:0.62rem; color:var(--ink-soft); opacity:0.7; margin-top:8px;">ver 11 • menu fix</div>
     </div>
   </div>
 
@@ -738,12 +738,6 @@
     <button class="mute-btn" id="muteBtn" type="button" title="Toggle sound">🔊</button>
     <button class="restart-btn" id="restartBtn" type="button" title="Start a new game">🔄</button>
     <button class="menu-btn" id="menuBtn" type="button" title="More options">⋮</button>
-    <div class="menu-drop hidden" id="menuDrop">
-      <button class="menu-item" id="commBtn" type="button"><span class="mi" id="commIcon">🎙️</span><span>Commentary</span></button>
-      <button class="menu-item" id="subBtn" type="button"><span class="mi">🌐</span><span id="subBtnLabel">বাংলা</span></button>
-      <button class="menu-item" id="installBtn" type="button"><span class="mi">⬇️</span><span>Install / Offline</span></button>
-      <button class="menu-item" id="infoBtn" type="button"><span class="mi">📊</span><span>Log &amp; Stats</span></button>
-    </div>
     <div class="team-block tigers">
       <div class="name" id="teamAName">Bangladesh Tigers</div>
       <div class="sub" id="tigersOnCourt">7 on court</div>
@@ -756,6 +750,12 @@
       <div class="name" id="teamBName">Rajshahi Panthers</div>
       <div class="sub" id="panthersOnCourt">7 on court</div>
     </div>
+  </div>
+  <div class="menu-drop hidden" id="menuDrop">
+    <button class="menu-item" id="commBtn" type="button"><span class="mi" id="commIcon">🎙️</span><span>Commentary</span></button>
+    <button class="menu-item" id="subBtn" type="button"><span class="mi">🌐</span><span id="subBtnLabel">বাংলা</span></button>
+    <button class="menu-item" id="installBtn" type="button"><span class="mi">⬇️</span><span>Install / Offline</span></button>
+    <button class="menu-item" id="infoBtn" type="button"><span class="mi">📊</span><span>Log &amp; Stats</span></button>
   </div>
 
   <div class="field">
@@ -1115,7 +1115,13 @@
   (function initTicketMenu(){
     const menuBtn = el('menuBtn'), menuDrop = el('menuDrop');
     if(!menuBtn || !menuDrop) return;
-    menuBtn.addEventListener('click', function(e){ e.stopPropagation(); menuDrop.classList.toggle('hidden'); });
+    function placeMenu(){
+      const r = menuBtn.getBoundingClientRect();
+      menuDrop.style.top = (r.bottom + 6) + 'px';
+      menuDrop.style.right = Math.max(8, window.innerWidth - r.right) + 'px';
+    }
+    menuBtn.addEventListener('click', function(e){ e.stopPropagation(); placeMenu(); menuDrop.classList.toggle('hidden'); });
+    window.addEventListener('resize', function(){ if(!menuDrop.classList.contains('hidden')) placeMenu(); });
     document.addEventListener('click', function(e){
       if(!menuDrop.classList.contains('hidden') && !menuDrop.contains(e.target)) menuDrop.classList.add('hidden');
     });
