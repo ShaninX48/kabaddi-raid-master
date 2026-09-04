@@ -9,7 +9,8 @@ No install, no build step — it's one `index.html` file.
 ## ✨ Features
 
 - **Turn-based raid strategy** — pick Hand Touch, Toe Touch, Dodge & Dash, or Bonus Raid each turn and simulate the outcome against the AI defense.
-- **Real 3D court** — Three.js scene with an angled broadcast camera, textured mud court, grass surrounds, lighting/shadows, and human-shaped 3D player figures.
+- **Two raid styles** — 🎲 Classic (pick a move, auto animation) or 🕹️ **Real-time** (move the raider yourself with WASD/arrows or drag, tag with E, sprint with Shift — defender AI hunts you, tackle pressure builds when surrounded, bonus line + mid-line return all real).
+- **Real 3D court** — Three.js scene with an angled broadcast camera (zooms in for real-time raids), textured mud court, grass surrounds, lighting/shadows, human-shaped 3D player figures with jersey numbers, crowd stands, floodlights and a stadium banner.
 - **Chant-to-breathe mechanic** — hold your "cant" by tapping the Kabaddi button *or* actually chanting/shouting into your mic (voice-volume detection, not exact word matching, so it works regardless of accent).
 - **Touch visualization** — the raider actually moves toward the specific defender being touched, with a flash effect at the moment of contact.
 - **Authentic Kabaddi rules:**
@@ -20,7 +21,7 @@ No install, no build step — it's one `index.html` file.
   - Do-or-Die raid (2 empty/failed raids in a row forces a must-score 3rd raid)
   - Golden Raid sudden-death tie-breaker if the match is level at full time
 - **Custom teams** — name your own two teams before each match (e.g. "UITS X KAIST").
-- **Sound & visual polish** — synthesized sound effects (no audio files), confetti, screen shake, score bump animation — all with a mute toggle.
+- **Sound & visual polish** — synthesized sound effects (no audio files), Bangla commentary (🎙️ toggle, uses your device voice), crowd roar swells on big moments, confetti, screen shake, score bump animation — all with a mute toggle.
 - **No-scroll layout** — fits on one screen; match log & stats tucked into a popup so gameplay stays visible.
 
 ## 🎮 How to Play

@@ -341,6 +341,40 @@
 
   .hidden{ display:none !important; }
 
+  /* ---------- Real-time raid controls ---------- */
+  .real-controls{ display:flex; gap:8px; align-items:stretch; margin-top:10px; flex-wrap:wrap; }
+  .tag-btn{
+    flex:1; min-width:130px; padding:12px 10px; border:none; border-radius:10px;
+    background: linear-gradient(180deg, var(--tigers-accent), #b81f33); color:#fff;
+    font-family:'Anton'; font-size:1rem; letter-spacing:1px; cursor:pointer;
+    box-shadow: 0 4px 0 #7d1522; user-select:none; touch-action:manipulation;
+  }
+  .tag-btn:active{ transform: translateY(3px); box-shadow:none; }
+  .sprint-btn{
+    flex:1; min-width:130px; padding:12px 10px; border:2px solid var(--tigers); border-radius:10px;
+    background:#fff; color:var(--tigers);
+    font-family:'Anton'; font-size:1rem; letter-spacing:1px; cursor:pointer;
+    user-select:none; touch-action:manipulation;
+  }
+  .sprint-btn.held{ background:var(--tigers); color:#fff; }
+  .pressure-wrap{
+    flex:1; min-width:110px; background: rgba(0,0,0,0.12);
+    border-radius: 6px; height:12px; overflow:hidden; align-self:center;
+  }
+  .pressure-bar{
+    height:100%; width:0%;
+    background: linear-gradient(90deg, var(--sun), var(--tigers-accent));
+    transition: width 0.1s linear;
+  }
+  .comm-btn{
+    position:absolute; top:8px; left:86px;
+    width:30px; height:30px; border-radius:50%;
+    border: none; background: rgba(0,0,0,0.08);
+    font-size:0.95rem; cursor:pointer; line-height:1;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .restart-btn:hover, .mute-btn:hover, .info-btn:hover, .install-btn:hover, .comm-btn:hover{ background: rgba(0,0,0,0.16); }
+
   /* ---------- Chant challenge (floats beside/over the game, no scrolling needed) ---------- */
   .chant-challenge{
     text-align:center;
@@ -572,6 +606,10 @@
         <button class="mode-btn selected" id="modeAiBtn" type="button">🤖 vs AI<small>You raid, AI defends + raids back</small></button>
         <button class="mode-btn" id="mode2pBtn" type="button">👥 2 Players<small>Same screen, pass & play — P1 vs P2</small></button>
       </div>
+      <div class="mode-row" id="styleRow">
+        <button class="mode-btn selected" id="styleClassicBtn" type="button">🎲 Classic raid<small>Move choose koro, auto animation</small></button>
+        <button class="mode-btn" id="styleRealBtn" type="button">🕹️ Real-time raid<small>Tumi nije douraba — WASD / drag + E tag</small></button>
+      </div>
       <div class="team-input-row">
         <input type="text" id="teamAInput" value="UITS" maxlength="22">
         <span class="vs-label">✕</span>
@@ -588,6 +626,7 @@
   <div class="ticket" id="ticketBar">
     <button class="mute-btn" id="muteBtn" type="button" title="Toggle sound">🔊</button>
     <button class="restart-btn" id="restartBtn" type="button" title="Start a new game">🔄</button>
+    <button class="comm-btn" id="commBtn" type="button" title="Bangla commentary on/off">🎙️</button>
     <button class="info-btn" id="infoBtn" type="button" title="Match log & stats">📊</button>
     <button class="install-btn" id="installBtn" type="button" title="Install / download kore offline khelo">⬇️</button>
     <div class="team-block tigers">
@@ -655,6 +694,12 @@
         <span class="m-desc">Cross the bonus line (needs full defense).</span>
       </button>
     </div>
+    <div class="real-controls hidden" id="realControls">
+      <button class="tag-btn" id="tagBtn" type="button">👆 TAG (E)</button>
+      <button class="sprint-btn" id="sprintBtn" type="button">⚡ SPRINT (hold)</button>
+      <div class="pressure-wrap" title="Tackle pressure — full hole dhora!"><div class="pressure-bar" id="pressureBar"></div></div>
+      <span class="chant-hint" id="realHint" style="width:100%;">WASD / arrow / court e drag kore dourao</span>
+    </div>
     <button class="next-btn hidden" id="nextBtn">Start Next Raid</button>
   </div>
 
@@ -713,6 +758,7 @@
 
   let state;
   let selectedMode = 'ai'; // 'ai' = solo vs AI, '2p' = local multiplayer hotseat
+  let raidStyle = 'classic'; // 'classic' = auto sim, 'real' = player moves the raider (WASD/drag)
   function getRaiderKey(){ return state.turn === 'player' ? 'tigers' : 'panthers'; }
   function getDefKey(){ return state.turn === 'player' ? 'panthers' : 'tigers'; }
   function isHumanTurn(){ return state.mode === '2p' || state.turn === 'player'; }
@@ -838,6 +884,37 @@
       }
     }
   };
+
+  /* ============ Bangla commentary (no audio files — uses device voice) ============ */
+  let commOn = true;
+  const commBtn = el('commBtn');
+  function speak(text, urgent){
+    if(!commOn || muted || !('speechSynthesis' in window)) return;
+    try{
+      if(urgent) speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'bn-BD'; u.rate = 1.05; u.volume = 0.9;
+      speechSynthesis.speak(u);
+    }catch(e){}
+  }
+  if(commBtn){
+    commBtn.addEventListener('click', ()=>{
+      commOn = !commOn;
+      commBtn.textContent = commOn ? '🎙️' : '🚫';
+      commBtn.style.opacity = commOn ? 1 : 0.45;
+      if(!commOn && 'speechSynthesis' in window){ try{ speechSynthesis.cancel(); }catch(e){} }
+    });
+  }
+  // Crowd roar swell on big moments (raises the ambient loop briefly)
+  function swellCrowd(){
+    if(!actx || !ambient || muted) return;
+    try{
+      const g = ambient.gain.gain, t0 = actx.currentTime;
+      g.cancelScheduledValues(t0);
+      g.setValueAtTime(0.09, t0);
+      g.exponentialRampToValueAtTime(0.018, t0 + 1.8);
+    }catch(e){}
+  }
 
   function setMuted(next){
     muted = next;
@@ -1147,6 +1224,39 @@
     return new THREE.CanvasTexture(canvas);
   }
 
+  // Crowd-dots texture for stadium stands (1 texture, cheap) + banner texture
+  function createCrowdTexture(){
+    const w = 512, h = 128;
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#39404d'; ctx.fillRect(0,0,w,h);
+    const cols = ['#e8b23b','#f42a41','#f4ecdd','#006a4e','#3b5a8a','#c06a3b','#8a3b3b'];
+    for(let i=0;i<1100;i++){
+      ctx.fillStyle = cols[(Math.random()*cols.length)|0];
+      ctx.fillRect((Math.random()*w)|0, (Math.random()*h)|0, 3, 4);
+    }
+    ctx.fillStyle = 'rgba(0,0,0,0.35)';
+    for(let r=1;r<4;r++){ ctx.fillRect(0, r*(h/4)-2, w, 3); }
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(3,1);
+    return tex;
+  }
+
+  function createBannerTexture(){
+    const canvas = document.createElement('canvas');
+    canvas.width = 1024; canvas.height = 128;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#006a4e'; ctx.fillRect(0,0,1024,128);
+    ctx.fillStyle = '#e8b23b'; ctx.fillRect(0,0,1024,10); ctx.fillRect(0,118,1024,10);
+    ctx.fillStyle = '#f4ecdd';
+    ctx.font = '900 64px Anton, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('🏟️ KABADDI • RAID MASTER 🏟️', 512, 66);
+    return new THREE.CanvasTexture(canvas);
+  }
+
   function createSpectator3d(colorHex){
     const group = new THREE.Group();
     const mat = new THREE.MeshStandardMaterial({color: colorHex, roughness:0.9});
@@ -1201,7 +1311,7 @@
   // jointed arms with hands, neck, head with face + hair.
   // Model faces local +Z (eyes at +Z). Pass facingY = Math.PI to face -Z.
   // armL/armR/legL/legR are pivot Groups (shoulder/hip) so run/brace/cheer animations swing naturally.
-  function createPlayerMesh3d(colorHex, facingY){
+  function createPlayerMesh3d(colorHex, facingY, num){
     const group = new THREE.Group();
     const bodyMat = new THREE.MeshStandardMaterial({color: colorHex, roughness:0.65});
     const skinMat = new THREE.MeshStandardMaterial({color: SKIN_TONES[Math.floor(Math.random()*SKIN_TONES.length)], roughness:0.75});
@@ -1244,6 +1354,19 @@
     part(new THREE.CylinderGeometry(0.215, 0.185, 0.52, 14), bodyMat, 0, 1.33, 0);
     const stripe = new THREE.Mesh(new THREE.TorusGeometry(0.205, 0.018, 8, 20), shortsMat);
     stripe.rotation.x = Math.PI/2; stripe.position.y = 1.43; group.add(stripe);
+    // jersey number plate (front)
+    if(num != null){
+      const nc = document.createElement('canvas'); nc.width = 64; nc.height = 48;
+      const nx = nc.getContext('2d');
+      nx.fillStyle = '#f4ecdd'; nx.fillRect(0,0,64,48);
+      nx.fillStyle = '#1d1d1d'; nx.font = '900 34px sans-serif';
+      nx.textAlign = 'center'; nx.textBaseline = 'middle';
+      nx.fillText(String(num), 32, 26);
+      const plate = new THREE.Mesh(new THREE.PlaneGeometry(0.2,0.15),
+        new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(nc)}));
+      plate.position.set(0, 1.36, 0.218);
+      group.add(plate);
+    }
     part(new THREE.SphereGeometry(0.088, 10, 10), bodyMat, -0.24, 1.56, 0);
     part(new THREE.SphereGeometry(0.088, 10, 10), bodyMat, 0.24, 1.56, 0);
 
@@ -1393,13 +1516,13 @@
     });
 
     TIGER_NAMES.forEach((name,i)=>{
-      const m = createPlayerMesh3d(TIGERS_HEX, Math.PI); // face the enemy (-Z)
+      const m = createPlayerMesh3d(TIGERS_HEX, Math.PI, i+1); // face the enemy (-Z)
       m.position.set((i-3)*0.82, 0, 4.0);
       scene3d.add(m);
       tigersMeshes.push(m);
     });
     PANTHER_NAMES.forEach((name,i)=>{
-      const m = createPlayerMesh3d(PANTHERS_HEX, 0); // face the enemy (+Z)
+      const m = createPlayerMesh3d(PANTHERS_HEX, 0, i+1); // face the enemy (+Z)
       m.position.set((i-3)*0.82, 0, -4.0);
       scene3d.add(m);
       panthersMeshes.push(m);
@@ -1408,6 +1531,40 @@
     raiderMesh3d = createRaiderMesh3d();
     raiderMesh3d.visible = false;
     scene3d.add(raiderMesh3d);
+
+    // ---- Stadium: crowd stands, floodlights, banner (B) ----
+    (function buildStadium(){
+      const crowdTex = createCrowdTexture();
+      const standMat = new THREE.MeshStandardMaterial({map: crowdTex, roughness:1});
+      [[0,10.2],[0,-10.2]].forEach(function(pt){
+        const stand = new THREE.Mesh(new THREE.BoxGeometry(17,3,2.6), standMat);
+        stand.position.set(pt[0], 1.5, pt[1]);
+        scene3d.add(stand);
+        const roof = new THREE.Mesh(new THREE.BoxGeometry(17.6,0.25,3.2), new THREE.MeshStandardMaterial({color:0x24304d, roughness:0.9}));
+        roof.position.set(pt[0], 3.15, pt[1]);
+        scene3d.add(roof);
+      });
+      [[-9,0],[9,0]].forEach(function(pt){
+        const stand = new THREE.Mesh(new THREE.BoxGeometry(2.6,3,15), standMat);
+        stand.position.set(pt[0], 1.5, pt[1]);
+        scene3d.add(stand);
+      });
+      const poleMat = new THREE.MeshStandardMaterial({color:0x555c66, roughness:0.6});
+      const lampMat = new THREE.MeshStandardMaterial({color:0xffffff, emissive:0xfff6d8, emissiveIntensity:1});
+      [[-7.5,7.8],[7.5,7.8],[-7.5,-7.8],[7.5,-7.8]].forEach(function(pt){
+        const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.09,0.13,9,8), poleMat);
+        pole.position.set(pt[0], 4.5, pt[1]);
+        scene3d.add(pole);
+        const head = new THREE.Mesh(new THREE.BoxGeometry(1.5,0.7,0.3), lampMat);
+        head.position.set(pt[0], 9.2, pt[1]);
+        head.lookAt(0, 0, 0);
+        scene3d.add(head);
+      });
+      const banner = new THREE.Mesh(new THREE.PlaneGeometry(9.5,1.15),
+        new THREE.MeshBasicMaterial({map:createBannerTexture()}));
+      banner.position.set(0, 4.3, -10.1);
+      scene3d.add(banner);
+    })();
 
     window.addEventListener('resize', onScene3dResize);
     onScene3dResize();
@@ -1419,11 +1576,11 @@
     const time = (t||0) * 0.001;
     for(let i=0;i<tigersMeshes.length;i++){
       const m = tigersMeshes[i];
-      if(m.visible) m.position.y = Math.sin(time*1.5 + i) * 0.02;
+      if(m.visible && !m.userData.fallen) m.position.y = Math.sin(time*1.5 + i) * 0.02;
     }
     for(let i=0;i<panthersMeshes.length;i++){
       const m = panthersMeshes[i];
-      if(m.visible) m.position.y = Math.sin(time*1.5 + i + 3) * 0.02;
+      if(m.visible && !m.userData.fallen) m.position.y = Math.sin(time*1.5 + i + 3) * 0.02;
     }
     if(raiderMesh3d && raiderMesh3d.visible && !raiderMesh3d.userData.tackled){
       const ud = raiderMesh3d.userData;
@@ -1434,6 +1591,7 @@
       if(ud.armR) ud.armR.rotation.x = swing*0.6;
       raiderMesh3d.position.y = Math.abs(Math.sin(time*11)) * 0.05;
     }
+    if(RT.active && !RT.over) rtStep(t || performance.now());
     renderer3d.render(scene3d, camera3d);
   }
 
@@ -1558,6 +1716,8 @@
       defTeam.outQueue = [];
       log('💥 ALL OUT! ' + state.teams[raidingKey].name + ' earn +2 Lona points. ' + defTeam.name + ' fully revived.', true);
       sfx.allout();
+      speak('All out! Lona! Dui bonus point!', true);
+      swellCrowd();
       triggerFlash();
       burstConfetti(['#e8b23b','#ffffff','#f42a41'], 26);
       cheerCrowd(true);
@@ -1802,6 +1962,7 @@
   function startPlayerRaid(move){
     if(state.resolving || state.matchOver || !isHumanTurn()) return;
     ensureAudio();
+    if(raidStyle === 'real'){ startRealRaid(); return; }
     state.resolving = true;
     setButtonsEnabled(false);
     nextBtn.classList.add('hidden');
@@ -1818,6 +1979,373 @@
     breathBar.style.transition = 'width 0.8s ease-out';
     breathBar.style.width = breathFail ? '0%' : Math.round(40 + Math.random()*55) + '%';
     performRaid(move, breathFail);
+  }
+
+  /* ================= REAL-TIME RAID MODE (A): tumi nije dourao =================
+     Human raid = WASD/arrows/drag movement + E/button tag + Shift sprint + chant breath.
+     AI raids ager motoi auto-simulated. Result jay asli rules engine-e (resolveRealRaid). */
+  const RT = {
+    active:false, over:false, rk:'tigers', dk:'panthers',
+    breath:100, pending:[], bonusDone:false, bonusOk:false, live:false,
+    pressure:0, cool:{}, lastT:0, keys:{}, drag:null, sprintHeld:false,
+    defCountBefore:7, isDoOrDie:false
+  };
+  const COURT_X = 3.3, COURT_Z = 6.3, BONUS_Z = 3.0;
+  const TAG_AUTO_R = 0.38, TAG_MANUAL_R = 0.9, GRAB_R = 0.78, TAG_HARD_R = 0.34;
+  const realControls = el('realControls'), tagBtn = el('tagBtn'),
+        sprintBtn = el('sprintBtn'), pressureBar = el('pressureBar'), realHint = el('realHint');
+  const raycaster = new THREE.Raycaster();
+  const ndc = new THREE.Vector2();
+
+  function rtMeshes(key){ return key === 'tigers' ? tigersMeshes : panthersMeshes; }
+  function rtFacingY(key){ return key === 'tigers' ? Math.PI : 0; }
+
+  // Defenders ke formation-e dar korano + soja pose (fallen/tagged visual clear)
+  function rtResetDefenders(){
+    const dk = RT.dk, arr = rtMeshes(dk);
+    const team = state.teams[dk];
+    const zRow = dk === 'tigers' ? 4.0 : -4.0;
+    arr.forEach((m,i)=>{
+      m.userData.anchor = {x:(i-3)*0.82, z:zRow};
+      m.userData.fallen = false;
+      m.userData.phase = Math.random()*6;
+      m.position.set(m.userData.anchor.x, 0, zRow);
+      m.rotation.set(0, rtFacingY(dk), 0);
+      // benched (out) players stay hidden — status onujayi visibility
+      const isIn = team.players[i] && team.players[i].status === 'in';
+      m.visible = !!isIn;
+      const s = isIn ? 1 : 0.001;
+      m.scale.set(s,s,s);
+    });
+  }
+
+  function rtSetCamera(close){
+    if(close){ camera3d.position.set(0, 6.0, 7.4); camera3d.lookAt(0, 0, 0.2); }
+    else { camera3d.position.set(0, 7.6, 9.6); camera3d.lookAt(0, 0, 0.4); }
+  }
+
+  function startRealRaid(){
+    ensureAudio();
+    state.resolving = true;
+    setButtonsEnabled(false);
+    nextBtn.classList.add('hidden');
+    movesEl.classList.add('hidden');
+    realControls.classList.remove('hidden');
+    const rk = getRaiderKey(), dk = getDefKey();
+    RT.active = true; RT.over = false;
+    RT.rk = rk; RT.dk = dk;
+    RT.breath = 100; RT.pending = []; RT.bonusDone = false;
+    RT.live = false; RT.pressure = 0; RT.cool = {}; RT.drag = null;
+    RT.defCountBefore = onCourtCount(state.teams[dk]);
+    RT.bonusOk = bonusEligible(state.teams[dk]);
+    RT.isDoOrDie = state.teams[rk].emptyRaidStreak >= 2;
+    RT.lastT = performance.now();
+    rtResetDefenders();
+    const startZ = rk === 'tigers' ? TIGERS_BAULK_Z : PANTHERS_BAULK_Z;
+    raiderMesh3d.userData.bodyMat.color.setHex(rk === 'tigers' ? TIGERS_HEX : PANTHERS_HEX);
+    raiderMesh3d.position.set(0, 0, startZ);
+    raiderMesh3d.rotation.set(0, rk === 'tigers' ? Math.PI : 0, 0);
+    raiderMesh3d.scale.set(1,1,1);
+    raiderMesh3d.userData.tackled = false;
+    raiderMesh3d.visible = true;
+    breathBar.style.transition = 'width 0.1s linear';
+    breathBar.style.width = '100%';
+    el('miniBreathBar').style.width = '100%';
+    el('chantChallenge').classList.remove('hidden');
+    el('chantBtn').onclick = ()=>{ RT.breath = Math.min(100, RT.breath + 9); sfx.tap(); };
+    activeTapFn = ()=>{ RT.breath = Math.min(100, RT.breath + 9); };
+    pressureBar.style.width = '0%';
+    el('raidTitle').innerHTML = '🕹️ ' + state.teams[rk].name + ' (' + turnLabel() + ') — mid-line cross kore raid LIVE koro!';
+    realHint.textContent = 'WASD / arrow / court-e drag = doura • E = tag • Shift = sprint • breath dhore rakho!';
+    rtSetCamera(true);
+    speak(state.teams[rk].name + ' raid! Dourao!');
+  }
+
+  function rtTagDefender(m){
+    const dk = RT.dk, defTeam = state.teams[dk];
+    const idx = rtMeshes(dk).indexOf(m);
+    const player = defTeam.players[idx];
+    if(!player || player.status !== 'in' || m.userData.fallen) return;
+    m.userData.fallen = true;
+    m.rotation.x = (m.position.z > raiderMesh3d.position.z ? 1 : -1) * 1.35;
+    m.position.y = 0.12;
+    RT.pending.push({player:player, mesh:m});
+    sfx.touch();
+    burstConfetti(['#006a4e','#e8b23b','#ffffff'], 8);
+    speak('Touch! ' + RT.pending.length + ' point!');
+    realHint.textContent = '👆 Touch! (' + RT.pending.length + ') Ekhon nijer half-e fire asho!';
+  }
+
+  function rtTagAttempt(){
+    if(!RT.active || RT.over || !RT.live) return;
+    const px = raiderMesh3d.position.x, pz = raiderMesh3d.position.z;
+    let best = null, bd = TAG_MANUAL_R;
+    rtMeshes(RT.dk).forEach((m)=>{
+      if(!m.visible || m.userData.fallen) return;
+      const d = Math.hypot(px-m.position.x, pz-m.position.z);
+      if(d < bd){ bd = d; best = m; }
+    });
+    if(best){
+      const idx = rtMeshes(RT.dk).indexOf(best);
+      const now = performance.now();
+      if((RT.cool['m'+idx] || 0) > now) return;
+      RT.cool['m'+idx] = now + 1200;
+      rtTagDefender(best);
+    }
+  }
+
+  function rtStep(now){
+    if(!RT.active || RT.over) return;
+    const dt = Math.min(0.05, (now - RT.lastT)/1000);
+    RT.lastT = now;
+    const rk = RT.rk, dk = RT.dk;
+    const defTeam = state.teams[dk];
+
+    // --- input ---
+    let dx = 0, dz = 0;
+    const K = RT.keys;
+    if(K['arrowleft']||K['a']) dx -= 1;
+    if(K['arrowright']||K['d']) dx += 1;
+    if(K['arrowup']||K['w']) dz -= 1;
+    if(K['arrowdown']||K['s']) dz += 1;
+    if(dx === 0 && dz === 0 && RT.drag){
+      const ddx = RT.drag.x - raiderMesh3d.position.x, ddz = RT.drag.z - raiderMesh3d.position.z;
+      if(Math.hypot(ddx,ddz) > 0.35){ dx = ddx; dz = ddz; }
+    }
+    const sprint = !!(K['shift'] || RT.sprintHeld);
+    const spd = sprint ? 4.5 : 3.4;
+    const len = Math.hypot(dx,dz);
+    if(len > 0){
+      dx /= len; dz /= len;
+      raiderMesh3d.position.x = Math.max(-COURT_X, Math.min(COURT_X, raiderMesh3d.position.x + dx*spd*dt));
+      raiderMesh3d.position.z = Math.max(-COURT_Z, Math.min(COURT_Z, raiderMesh3d.position.z + dz*spd*dt));
+      raiderMesh3d.rotation.y = Math.atan2(dx, dz);
+    }
+    const px = raiderMesh3d.position.x, pz = raiderMesh3d.position.z;
+
+    // --- court er baire pa = OUT (asli rule) ---
+    if(Math.abs(px) >= COURT_X - 0.01 || Math.abs(pz) >= COURT_Z - 0.01){
+      rtFinish('out');
+      return;
+    }
+    // --- mid-line cross = raid LIVE ---
+    if(!RT.live && ((rk === 'tigers' && pz < 0) || (rk === 'panthers' && pz > 0))){
+      RT.live = true;
+      realHint.textContent = 'Raid LIVE! Tag kore nijer half-e fire asho!';
+      sfx.whistle();
+    }
+    // --- nijer half-e fira = raid sesh, point bank ---
+    if(RT.live && ((rk === 'tigers' && pz > 0.15) || (rk === 'panthers' && pz < -0.15))){
+      rtFinish(null);
+      return;
+    }
+    // --- bonus line (raid-start count onujayi eligible hole) ---
+    if(RT.live && !RT.bonusDone && RT.bonusOk){
+      if((rk === 'tigers' && pz < -BONUS_Z) || (rk === 'panthers' && pz > BONUS_Z)){
+        RT.bonusDone = true;
+        sfx.bonus();
+        burstConfetti(['#e8b23b','#ffffff'], 12);
+        realHint.textContent = '⭐ Bonus! Ekhon fire asho!';
+        speak('Bonus point!');
+      }
+    }
+
+    // --- defender AI: tara + mid-line cross kore na (asli rule) ---
+    const defArr = rtMeshes(dk);
+    const defSpeed = 2.9 + defTeam.defenseStrength * 0.016;
+    let nearest = 1e9, nearCount = 0;
+    defArr.forEach((m)=>{
+      if(!m.visible || m.userData.fallen) return;
+      const ud = m.userData;
+      const mx = m.position.x, mz = m.position.z;
+      const ddx = px - mx, ddz = pz - mz;
+      const dist = Math.hypot(ddx, ddz);
+      if(dist < nearest) nearest = dist;
+      if(dist < GRAB_R) nearCount++;
+      // gaye brush laglei touch (khub kache ele)
+      if(RT.live && dist < TAG_AUTO_R) rtTagDefender(m);
+      const raiderOnTheirHalf = (dk === 'tigers' && pz > 0) || (dk === 'panthers' && pz < 0);
+      let gx, gz;
+      if(RT.live && raiderOnTheirHalf){
+        gx = px*0.85 + ud.anchor.x*0.15;
+        gz = pz*0.85 + ud.anchor.z*0.15;
+      } else { gx = ud.anchor.x; gz = ud.anchor.z; }
+      const vx = gx-mx, vz = gz-mz, vl = Math.hypot(vx,vz);
+      const sp = (RT.live && raiderOnTheirHalf) ? defSpeed : 2.0;
+      if(vl > 0.05){
+        const step = Math.min(vl, sp*dt);
+        m.position.x = mx + vx/vl*step;
+        let nz = mz + vz/vl*step;
+        if(dk === 'tigers') nz = Math.max(0.15, nz); else nz = Math.min(-0.15, nz);
+        m.position.z = Math.max(-6.2, Math.min(6.2, nz));
+        ud.phase = (ud.phase || 0) + dt*sp*3.2;
+        const sw = Math.sin(ud.phase)*0.5;
+        if(ud.legL) ud.legL.rotation.x = sw;
+        if(ud.legR) ud.legR.rotation.x = -sw;
+        if(ud.armL) ud.armL.rotation.x = -sw*0.5;
+        if(ud.armR) ud.armR.rotation.x = sw*0.5;
+        m.rotation.y = Math.atan2(vx, vz);
+      }
+    });
+
+    // --- tackle pressure: gherao hole dhora ---
+    if(nearest < GRAB_R) RT.pressure += (30 + nearCount*22) * dt;
+    else RT.pressure -= 34 * dt;
+    if(nearest < TAG_HARD_R) RT.pressure += 40 * dt;
+    RT.pressure = Math.max(0, Math.min(100, RT.pressure));
+    pressureBar.style.width = RT.pressure + '%';
+    if(RT.pressure >= 100){ rtFinish('tackle'); return; }
+
+    // --- breath (chant!): sesh hole raid fail ---
+    RT.breath -= (sprint ? 8 : 4.6) * dt;
+    if(micEnabled){
+      const level = getMicLevel();
+      const lb = el('micLevelBar');
+      if(lb){
+        lb.style.width = Math.min(100, Math.round(level * 400)) + '%';
+        lb.classList.toggle('hot', level > 0.035);
+      }
+      if(level > 0.035) RT.breath = Math.min(100, RT.breath + 22*dt);
+    }
+    breathBar.style.width = Math.max(0, RT.breath) + '%';
+    el('miniBreathBar').style.width = Math.max(0, RT.breath) + '%';
+    if(RT.breath <= 0){ rtFinish('breath'); return; }
+  }
+
+  function rtFinish(fail){
+    if(RT.over) return;
+    RT.over = true; RT.active = false;
+    RT.keys = {}; RT.drag = null; RT.sprintHeld = false;
+    el('chantChallenge').classList.add('hidden');
+    realControls.classList.add('hidden');
+    movesEl.classList.remove('hidden');
+    el('chantBtn').onclick = null;
+    activeTapFn = null;
+    rtSetCamera(false);
+    breathBar.style.transition = 'width 0.8s ease-out';
+    const res = {
+      touches: RT.pending.map(p=>p.player),
+      bonus: RT.bonusDone,
+      fail: fail, // null | 'tackle' | 'breath' | 'out'
+      defCountBefore: RT.defCountBefore,
+      rk: RT.rk, dk: RT.dk,
+      isDoOrDie: RT.isDoOrDie
+    };
+    el('raidTitle').textContent = 'Raiding...';
+    if(fail){
+      raiderMesh3d.userData.tackled = true;
+      triggerShake();
+      tweenNumber(0, 1.35, 220, v=>{ raiderMesh3d.rotation.x = v; });
+      setTimeout(()=>{
+        raiderMesh3d.visible = false;
+        raiderMesh3d.rotation.x = 0;
+        resolveRealRaid(res);
+      }, 650);
+    } else {
+      const homeZ = RT.rk === 'tigers' ? TIGERS_BAULK_Z : PANTHERS_BAULK_Z;
+      tweenNumber(raiderMesh3d.position.z, homeZ, 500, v=>{ raiderMesh3d.position.z = v; });
+      tweenNumber(raiderMesh3d.position.x, 0, 500, v=>{ raiderMesh3d.position.x = v; }, ()=>{
+        raiderMesh3d.visible = false;
+        resolveRealRaid(res);
+      });
+    }
+  }
+
+  // Real-time raid er result -> asli rules engine (score/revive/all-out/DoD/golden)
+  function resolveRealRaid(res){
+    const raiderTeam = state.teams[res.rk], defTeam = state.teams[res.dk];
+    const defCountBefore = res.defCountBefore;
+    const superTackle = defCountBefore <= 3;
+    const doOrDieTag = res.isDoOrDie ? '⚠️ Do-or-Die: ' : '';
+    const raiderLabel = raiderTeam.name;
+    let msg = '', raiderScored = false;
+
+    if(res.fail){
+      // fail hole pending touch void (asli rule) — pora defender ra uthe daray
+      rtResetDefenders();
+      const pts = superTackle ? 2 : 1;
+      defTeam.score.tackle += pts;
+      const outRaider = markOut(raiderTeam, 1)[0];
+      const why = res.fail === 'breath' ? 'dom bhenge gyeche! Breath sesh!'
+              : res.fail === 'out' ? 'court er baire pa porlo! Out!'
+              : 'dhora poreche! Tackled!';
+      msg = doOrDieTag + raiderLabel + ' — ' + why + ' ' + (superTackle ? 'SUPER TACKLE! +2 to ' : '+1 tackle point to ') + defTeam.name + '. Raider ' + (outRaider || 'out') + ' is OUT.';
+      reviveMany(defTeam, pts);
+      sfx.tackle(); triggerShake(); cheerCrowd(false);
+      speak('Tackle! Raider dhora!');
+    } else {
+      const removed = res.touches.length ? applyOut(defTeam, res.touches) : [];
+      if(removed.length){
+        raiderTeam.score.raid += removed.length;
+        raiderScored = true;
+        reviveMany(raiderTeam, removed.length);
+      }
+      if(res.bonus){
+        raiderTeam.score.bonus += 1;
+        raiderScored = true;
+      }
+      if(raiderScored){
+        msg = doOrDieTag + raiderLabel + ' — Real raid ✅' + (removed.length ? ' tags ' + removed.join(' & ') + ' (+' + removed.length + ')' : '') + (res.bonus ? ' + ⭐ bonus' : '') + '. Nirapode fire elo!';
+        sfx.touch();
+        burstConfetti(['#006a4e','#e8b23b','#ffffff'], 14);
+        cheerCrowd(false);
+        swellCrowd();
+        speak('Chomotkar raid! ' + (removed.length + (res.bonus ? 1 : 0)) + ' point!');
+      } else if(res.isDoOrDie){
+        const pts = superTackle ? 2 : 1;
+        defTeam.score.tackle += pts;
+        const outRaider = markOut(raiderTeam, 1)[0];
+        msg = doOrDieTag + raiderLabel + ' — khali hate firlo, Do-or-Die te score must! Ruled OUT! Raider ' + (outRaider || 'out') + ' is OUT.';
+        reviveMany(defTeam, pts);
+        sfx.tackle();
+        speak('Do or die fail! Raider out!');
+      } else {
+        msg = raiderLabel + ' — khali hate safe return. Empty raid, no points.';
+      }
+    }
+
+    raiderTeam.emptyRaidStreak = raiderScored ? 0 : (res.isDoOrDie ? 0 : raiderTeam.emptyRaidStreak + 1);
+    state.lastRaidScored = raiderScored;
+    log(msg, raiderScored);
+    checkAllOut(res.dk, res.rk);
+    checkAllOut(res.rk, res.dk);
+    renderTokens();
+    renderScore();
+    advanceTurn();
+  }
+
+  function rtCourtPoint(clientX, clientY){
+    const rect = renderer3d.domElement.getBoundingClientRect();
+    ndc.x = ((clientX - rect.left)/rect.width)*2 - 1;
+    ndc.y = -((clientY - rect.top)/rect.height)*2 + 1;
+    raycaster.setFromCamera(ndc, camera3d);
+    const o = raycaster.ray.origin, d = raycaster.ray.direction;
+    if(Math.abs(d.y) < 1e-5) return null;
+    const t = -o.y / d.y;
+    if(t < 0) return null;
+    return {
+      x: Math.max(-COURT_X, Math.min(COURT_X, o.x + d.x*t)),
+      z: Math.max(-COURT_Z, Math.min(COURT_Z, o.z + d.z*t))
+    };
+  }
+
+  function initRealMode(){
+    tagBtn.addEventListener('click', rtTagAttempt);
+    sprintBtn.addEventListener('pointerdown', (e)=>{ e.preventDefault(); RT.sprintHeld = true; sprintBtn.classList.add('held'); });
+    ['pointerup','pointerleave','pointercancel'].forEach(ev=> sprintBtn.addEventListener(ev, ()=>{ RT.sprintHeld = false; sprintBtn.classList.remove('held'); }));
+    document.addEventListener('keydown', (e)=>{
+      const k = e.key.toLowerCase();
+      RT.keys[k] = true;
+      if(RT.active && ['arrowup','arrowdown','arrowleft','arrowright',' '].indexOf(k) >= 0) e.preventDefault();
+      if(RT.active && !RT.over && k === 'e') rtTagAttempt();
+    });
+    document.addEventListener('keyup', (e)=>{ RT.keys[e.key.toLowerCase()] = false; });
+    window.addEventListener('blur', ()=>{ RT.keys = {}; RT.sprintHeld = false; });
+    const cv = renderer3d.domElement;
+    cv.style.touchAction = 'none';
+    cv.addEventListener('pointerdown', (e)=>{ if(RT.active && !RT.over){ const p = rtCourtPoint(e.clientX, e.clientY); if(p) RT.drag = p; } });
+    cv.addEventListener('pointermove', (e)=>{ if(RT.active && !RT.over && (e.buttons || e.pointerType === 'touch')){ const p = rtCourtPoint(e.clientX, e.clientY); if(p) RT.drag = p; } });
+    ['pointerup','pointercancel','pointerleave'].forEach(ev=> cv.addEventListener(ev, ()=>{ RT.drag = null; }));
   }
 
   function performRaid(move, breathFail){
@@ -1949,9 +2477,9 @@
         else if(move === 'dodge' && success && !isDoOrDie && !breathFail){ outcome = 'empty'; }
         else { outcome = 'tackle'; }
 
-        if(outcome === 'touch'){ sfx.touch(); burstConfetti(['#006a4e','#e8b23b','#ffffff'], 14); cheerCrowd(false); }
-        else if(outcome === 'bonus'){ sfx.bonus(); burstConfetti(['#e8b23b','#ffffff'], 16); cheerCrowd(false); }
-        else if(outcome === 'tackle'){ sfx.tackle(); triggerShake(); cheerCrowd(false); }
+        if(outcome === 'touch'){ sfx.touch(); burstConfetti(['#006a4e','#e8b23b','#ffffff'], 14); cheerCrowd(false); swellCrowd(); speak('Chomotkar touch! Point!'); }
+        else if(outcome === 'bonus'){ sfx.bonus(); burstConfetti(['#e8b23b','#ffffff'], 16); cheerCrowd(false); speak('Bonus point!'); }
+        else if(outcome === 'tackle'){ sfx.tackle(); triggerShake(); cheerCrowd(false); speak('Tackle! Raider dhora poreche!'); }
 
         log(msg, raiderScored);
         checkAllOut(defKey, raiderKey);
@@ -1983,6 +2511,7 @@
       : (state.turn === 'player' ? team.name + ' (You)' : team.name + ' (AI)');
     el('raidTitle').innerHTML = warn + who + ' — choose a move <span class="turn-badge ' + (state.turn === 'player' ? 'p1' : 'p2') + '">' + turnLabel() + '</span>';
     el('raidPanel').classList.toggle('do-or-die', isDoOrDie);
+    if(isDoOrDie) speak('Do or die raid! Score kortei hobe!');
   }
 
   function triggerAiRaidWithDelay(){
@@ -2060,6 +2589,7 @@
     state.goldenRaid = true;
     log('🥇 Scores level at full time! Golden Raid — sudden death, first score wins.', true);
     sfx.goldenSting();
+    speak('Golden raid! Ebar hothat mrittu!', true);
     el('ticketBar').classList.add('golden');
     state.turn = Math.random() < 0.5 ? 'player' : 'ai';
     if(isHumanTurn()){
@@ -2084,6 +2614,7 @@
     const aScore = totalScore(state.teams.panthers);
     el('endScore').textContent = tScore + ' : ' + aScore;
     el('endWinner').textContent = '🥇 Golden Raid winner: ' + winnerTeam.name + '!';
+    speak('Golden raid joy! ' + winnerTeam.name + ' jiteche!', true);
     el('endMvp').textContent = winnerTeam.name + ' scored the sudden-death raid to clinch it.';
     sfx.matchEnd();
     burstConfetti(['#e8b23b','#006a4e','#f42a41','#ffffff'], 32);
@@ -2105,6 +2636,7 @@
     if(tScore>aScore) winner = state.teams.tigers.name + ' win the match! 🏆';
     else winner = state.teams.panthers.name + ' win the match! 🏆';
     el('endWinner').textContent = winner;
+    speak('Khela sesh! ' + winner, true);
     const tigerRaidShare = state.teams.tigers.score.raid + state.teams.tigers.score.bonus;
     const pantherRaidShare = state.teams.panthers.score.raid + state.teams.panthers.score.bonus;
     const mvpTeam = tigerRaidShare >= pantherRaidShare ? state.teams.tigers.name : state.teams.panthers.name;
@@ -2138,10 +2670,20 @@
     raidTitleForTurn();
     const modeText = state.mode === '2p' ? '👥 LOCAL MULTIPLAYER (P1 vs P2, pass & play). ' : '🤖 SOLO vs AI. ';
     log('🏟️ ' + finalA + ' vs ' + finalB + ' — match begins! ' + modeText + finalA + ' raid first.', true);
+    speak(finalA + ' bonam ' + finalB + '. Khela shuru!', true);
     if(state.mode === '2p') log('📱 P1 device niye raid koro, then P2 ke dao. Keyboard: 1-4 = move.', false);
   }
 
   function openStartScreen(){
+    // cholonto real-time raid thakle thamano (loop leak atkate)
+    try{
+      if(RT.active){ RT.active = false; RT.over = true; }
+      el('realControls').classList.add('hidden');
+      el('chantChallenge').classList.add('hidden');
+      movesEl.classList.remove('hidden');
+      if(raiderMesh3d) raiderMesh3d.visible = false;
+      rtSetCamera(false);
+    }catch(e){}
     el('teamAInput').value = state.teams.tigers.name;
     el('teamBInput').value = state.teams.panthers.name;
     el('endOverlay').classList.remove('show');
@@ -2188,6 +2730,16 @@
   modeAiBtn.addEventListener('click', ()=> setSelectedMode('ai'));
   mode2pBtn.addEventListener('click', ()=> setSelectedMode('2p'));
 
+  // ---- Raid style selector (classic auto-sim vs real-time control) ----
+  const styleClassicBtn = el('styleClassicBtn'), styleRealBtn = el('styleRealBtn');
+  function setRaidStyle(s){
+    raidStyle = s;
+    styleClassicBtn.classList.toggle('selected', s === 'classic');
+    styleRealBtn.classList.toggle('selected', s === 'real');
+  }
+  styleClassicBtn.addEventListener('click', ()=> setRaidStyle('classic'));
+  styleRealBtn.addEventListener('click', ()=> setRaidStyle('real'));
+
   // ---- Keyboard shortcuts: 1-4 = moves (great for hotseat multiplayer) ----
   document.addEventListener('keydown', (e)=>{
     if(!el('startOverlay').classList.contains('show') && !state.matchOver && isHumanTurn() && !state.resolving){
@@ -2208,6 +2760,7 @@
 
   // init
   init3dScene();
+  initRealMode();
   renderTokens();
   renderScore();
   updateOddsDisplay();
