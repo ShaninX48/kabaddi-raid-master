@@ -603,7 +603,7 @@
   <div class="modal-overlay show" id="startOverlay">
     <div class="modal">
       <h2>🏟️ Kabaddi: Raid Master</h2>
-      <p>🗣️ <b>Asli moja chant e!</b> Raid e "Kabaddi! Kabaddi!" bole breath dhoro — mic e jore bolle breath bharbe, na parle tap button backup.</p>
+      <p style="margin:4px 0;">🗣️ Chant e breath dhoro — mic / tap button.</p>
       <div class="mode-row" id="modeRow">
         <button class="mode-btn selected" id="modeAiBtn" type="button">🤖 vs AI<small>You raid, AI defends + raids back</small></button>
         <button class="mode-btn" id="mode2pBtn" type="button">👥 2 Players<small>Same screen, pass & play — P1 vs P2</small></button>
@@ -617,15 +617,14 @@
         <span class="vs-label">✕</span>
         <input type="text" id="teamBInput" value="KAIST" maxlength="22">
       </div>
-      <p style="font-size:0.78rem; color:var(--ink-soft);" id="modeHint">Solo mode: you control <b>Team 1 (P1)</b>. Team 2 raids automatically.</p>
-      <details style="font-size:0.78rem; color:var(--ink-soft); margin:6px 0; text-align:left;">
-        <summary style="cursor:pointer; text-align:center;">ℹ️ Mic / offline info</summary>
-        <p>🗣️ <b>Chant (mic) diye khelte:</b> Vercel link / <b>Chant-Khelo.bat</b> (localhost) diye kholo — mic permission Allow koro. Direct <b>index.html</b> double-click e mic block thake, tokhon tap button e khelo.</p>
-        <p>📲 <b>Offline khelte chao?</b> Vercel link theke ekbar khullei phone e install hoye jabe. Ba <a href="https://github.com/ShaninX48/kabaddi-raid-master/archive/refs/heads/main.zip">ZIP download</a> kore chant er jonno <b>Chant-Khelo.bat</b>, tap diye khelte <b>index.html</b> kholo.</p>
-        <p>Starting the match will ask for mic permission so you can chant out loud. You can skip it and use the tap button instead.</p>
+      <p style="font-size:0.78rem; color:var(--ink-soft);" id="modeHint">Solo: tumi <b>Team 1</b>, Team 2 auto.</p>
+      <details style="font-size:0.75rem; color:var(--ink-soft); margin:2px 0 6px; text-align:center;">
+        <summary style="cursor:pointer;">ℹ️ Mic / offline</summary>
+        <p style="margin:4px 0;">Mic sudhu HTTPS/localhost e (Chant-Khelo.bat). file:// te tap button.</p>
+        <p style="margin:4px 0;">Offline: browser menu → Install, ba <a href="https://github.com/ShaninX48/kabaddi-raid-master/archive/refs/heads/main.zip">ZIP download</a>.</p>
       </details>
       <button id="startMatchBtn">🚩 Start Match</button>
-      <div style="font-size:0.62rem; color:var(--ink-soft); opacity:0.7; margin-top:8px;">ver 3 • real-time + commentary</div>
+      <div style="font-size:0.62rem; color:var(--ink-soft); opacity:0.7; margin-top:8px;">ver 4 • real-time + commentary</div>
     </div>
   </div>
 
@@ -2730,8 +2729,8 @@
     modeAiBtn.classList.toggle('selected', m === 'ai');
     mode2pBtn.classList.toggle('selected', m === '2p');
     modeHint.innerHTML = m === '2p'
-      ? 'Multiplayer: <b>P1 controls Team 1</b>, <b>P2 controls Team 2</b>. Same screen e pass kore khelo.'
-      : 'Solo mode: you control <b>Team 1 (P1)</b>. Team 2 raids automatically.';
+      ? '<b>P1</b> = Team 1, <b>P2</b> = Team 2. Pass kore khelo.'
+      : 'Solo: tumi <b>Team 1</b>, Team 2 auto.';
   }
   modeAiBtn.addEventListener('click', ()=> setSelectedMode('ai'));
   mode2pBtn.addEventListener('click', ()=> setSelectedMode('2p'));
