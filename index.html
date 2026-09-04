@@ -377,6 +377,19 @@
   }
   .restart-btn:hover, .mute-btn:hover, .info-btn:hover, .install-btn:hover, .comm-btn:hover{ background: rgba(0,0,0,0.16); }
 
+  /* ---------- Bangla commentator lower-third banner ---------- */
+  .comm-banner{
+    position:absolute; left:50%; bottom:10px;
+    transform:translateX(-50%) translateY(20px);
+    background:rgba(20,20,15,0.88); color:#f4ecdd;
+    font-family:'Roboto Slab', serif; font-weight:700; font-size:0.85rem;
+    padding:8px 16px; border-radius:20px; border-left:4px solid var(--sun);
+    opacity:0; pointer-events:none; z-index:18; max-width:92%; text-align:center;
+    transition: opacity 0.25s, transform 0.25s;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .comm-banner.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
   /* ---------- Chant challenge (floats beside/over the game, no scrolling needed) ---------- */
   .chant-challenge{
     text-align:center;
@@ -624,7 +637,7 @@
         <p style="margin:4px 0;">Offline: browser menu → Install, ba <a href="https://github.com/ShaninX48/kabaddi-raid-master/archive/refs/heads/main.zip">ZIP download</a>.</p>
       </details>
       <button id="startMatchBtn">🚩 Start Match</button>
-      <div style="font-size:0.62rem; color:var(--ink-soft); opacity:0.7; margin-top:8px;">ver 4 • real-time + commentary</div>
+      <div style="font-size:0.62rem; color:var(--ink-soft); opacity:0.7; margin-top:8px;">ver 5 • বাংলা ধারাভাষ্য</div>
     </div>
   </div>
 
@@ -652,6 +665,7 @@
     <div class="confetti-layer" id="confettiLayer"></div>
     <div class="court" id="court">
       <div class="court-flash" id="courtFlash"></div>
+      <div class="comm-banner" id="commBanner"></div>
     </div>
     <div class="benches">
       <div class="bench" id="tigersBench"><span class="label">Tigers bench</span></div>
@@ -899,6 +913,7 @@
       if(urgent) speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text);
       u.lang = 'bn-BD'; u.rate = 1.05; u.volume = 0.9;
+      if(bnVoice) u.voice = bnVoice;
       speechSynthesis.speak(u);
     }catch(e){}
   }
@@ -919,6 +934,32 @@
       g.setValueAtTime(0.09, t0);
       g.exponentialRampToValueAtTime(0.018, t0 + 1.8);
     }catch(e){}
+  }
+
+  /* ===== Visible Bangla commentator: lower-third banner + voice ===== */
+  const commBanner = el('commBanner');
+  let commTimer = null, bnVoice = null;
+  function pickBnVoice(){
+    try{
+      const vs = speechSynthesis.getVoices() || [];
+      bnVoice = vs.find(v=>v.lang && v.lang.toLowerCase().indexOf('bn') === 0) || null;
+    }catch(e){}
+  }
+  if('speechSynthesis' in window){
+    pickBnVoice();
+    try{ speechSynthesis.onvoiceschanged = pickBnVoice; }catch(e){}
+  }
+  // Sob commentary ekhan diye jabe: screen-e Bangla banner + voice
+  function commentary(text, urgent){
+    if(commBanner){
+      commBanner.textContent = '🎙️ ' + text;
+      commBanner.classList.remove('show');
+      void commBanner.offsetWidth;
+      commBanner.classList.add('show');
+      if(commTimer) clearTimeout(commTimer);
+      commTimer = setTimeout(()=> commBanner.classList.remove('show'), 2800);
+    }
+    speak(text, urgent);
   }
 
   function setMuted(next){
@@ -1721,7 +1762,7 @@
       defTeam.outQueue = [];
       log('💥 ALL OUT! ' + state.teams[raidingKey].name + ' earn +2 Lona points. ' + defTeam.name + ' fully revived.', true);
       sfx.allout();
-      speak('All out! Lona! Dui bonus point!', true);
+      commentary('অল-আউট! লোনা! দুই বোনাস পয়েন্ট!', true);
       swellCrowd();
       triggerFlash();
       burstConfetti(['#e8b23b','#ffffff','#f42a41'], 26);
@@ -2063,7 +2104,7 @@
     el('raidTitle').innerHTML = '🕹️ ' + state.teams[rk].name + ' (' + turnLabel() + ') — mid-line cross kore raid LIVE koro!';
     realHint.textContent = 'WASD / arrow / court-e drag = doura • E = tag • Shift = sprint • breath dhore rakho!';
     rtSetCamera(true);
-    speak(state.teams[rk].name + ' raid! Dourao!');
+    commentary('রেইডে ' + state.teams[rk].name + '! দৌড়াও!');
   }
 
   function rtTagDefender(m){
@@ -2077,7 +2118,7 @@
     RT.pending.push({player:player, mesh:m});
     sfx.touch();
     burstConfetti(['#006a4e','#e8b23b','#ffffff'], 8);
-    speak('Touch! ' + RT.pending.length + ' point!');
+    commentary('টাচ! ' + RT.pending.length + ' পয়েন্ট!');
     realHint.textContent = '👆 Touch! (' + RT.pending.length + ') Ekhon nijer half-e fire asho!';
   }
 
@@ -2151,7 +2192,7 @@
         sfx.bonus();
         burstConfetti(['#e8b23b','#ffffff'], 12);
         realHint.textContent = '⭐ Bonus! Ekhon fire asho!';
-        speak('Bonus point!');
+        commentary('বোনাস পয়েন্ট!');
       }
     }
 
@@ -2277,7 +2318,7 @@
       msg = doOrDieTag + raiderLabel + ' — ' + why + ' ' + (superTackle ? 'SUPER TACKLE! +2 to ' : '+1 tackle point to ') + defTeam.name + '. Raider ' + (outRaider || 'out') + ' is OUT.';
       reviveMany(defTeam, pts);
       sfx.tackle(); triggerShake(); cheerCrowd(false);
-      speak('Tackle! Raider dhora!');
+      commentary('ট্যাকল! রেইডার ধরা!');
     } else {
       const removed = res.touches.length ? applyOut(defTeam, res.touches) : [];
       if(removed.length){
@@ -2295,7 +2336,7 @@
         burstConfetti(['#006a4e','#e8b23b','#ffffff'], 14);
         cheerCrowd(false);
         swellCrowd();
-        speak('Chomotkar raid! ' + (removed.length + (res.bonus ? 1 : 0)) + ' point!');
+        commentary('চমৎকার রেইড! ' + (removed.length + (res.bonus ? 1 : 0)) + ' পয়েন্ট!');
       } else if(res.isDoOrDie){
         const pts = superTackle ? 2 : 1;
         defTeam.score.tackle += pts;
@@ -2303,7 +2344,7 @@
         msg = doOrDieTag + raiderLabel + ' — khali hate firlo, Do-or-Die te score must! Ruled OUT! Raider ' + (outRaider || 'out') + ' is OUT.';
         reviveMany(defTeam, pts);
         sfx.tackle();
-        speak('Do or die fail! Raider out!');
+        commentary('ডু-অর-ডাই ব্যর্থ! রেইডার আউট!');
       } else {
         msg = raiderLabel + ' — khali hate safe return. Empty raid, no points.';
       }
@@ -2482,9 +2523,9 @@
         else if(move === 'dodge' && success && !isDoOrDie && !breathFail){ outcome = 'empty'; }
         else { outcome = 'tackle'; }
 
-        if(outcome === 'touch'){ sfx.touch(); burstConfetti(['#006a4e','#e8b23b','#ffffff'], 14); cheerCrowd(false); swellCrowd(); speak('Chomotkar touch! Point!'); }
-        else if(outcome === 'bonus'){ sfx.bonus(); burstConfetti(['#e8b23b','#ffffff'], 16); cheerCrowd(false); speak('Bonus point!'); }
-        else if(outcome === 'tackle'){ sfx.tackle(); triggerShake(); cheerCrowd(false); speak('Tackle! Raider dhora poreche!'); }
+        if(outcome === 'touch'){ sfx.touch(); burstConfetti(['#006a4e','#e8b23b','#ffffff'], 14); cheerCrowd(false); swellCrowd(); commentary('চমৎকার টাচ! পয়েন্ট!'); }
+        else if(outcome === 'bonus'){ sfx.bonus(); burstConfetti(['#e8b23b','#ffffff'], 16); cheerCrowd(false); commentary('বোনাস পয়েন্ট!'); }
+        else if(outcome === 'tackle'){ sfx.tackle(); triggerShake(); cheerCrowd(false); commentary('ট্যাকল! রেইডার ধরা পড়েছে!'); }
 
         log(msg, raiderScored);
         checkAllOut(defKey, raiderKey);
@@ -2516,7 +2557,7 @@
       : (state.turn === 'player' ? team.name + ' (You)' : team.name + ' (AI)');
     el('raidTitle').innerHTML = warn + who + ' — choose a move <span class="turn-badge ' + (state.turn === 'player' ? 'p1' : 'p2') + '">' + turnLabel() + '</span>';
     el('raidPanel').classList.toggle('do-or-die', isDoOrDie);
-    if(isDoOrDie) speak('Do or die raid! Score kortei hobe!');
+    if(isDoOrDie) commentary('ডু-অর-ডাই রেইড! স্কোর করতেই হবে!');
   }
 
   function triggerAiRaidWithDelay(){
@@ -2571,6 +2612,7 @@
         if(state.half === 1){
           state.half = 2;
           log('🕐 Half-time! Teams swap raiding order continues.', true);
+          commentary('বিরতি শেষ! দ্বিতীয়ার্ধ শুরু!');
           sfx.halftime();
         } else {
           endMatch();
@@ -2594,7 +2636,7 @@
     state.goldenRaid = true;
     log('🥇 Scores level at full time! Golden Raid — sudden death, first score wins.', true);
     sfx.goldenSting();
-    speak('Golden raid! Ebar hothat mrittu!', true);
+    commentary('গোল্ডেন রেইড! এবার হঠাৎ মৃত্যু!', true);
     el('ticketBar').classList.add('golden');
     state.turn = Math.random() < 0.5 ? 'player' : 'ai';
     if(isHumanTurn()){
@@ -2619,7 +2661,7 @@
     const aScore = totalScore(state.teams.panthers);
     el('endScore').textContent = tScore + ' : ' + aScore;
     el('endWinner').textContent = '🥇 Golden Raid winner: ' + winnerTeam.name + '!';
-    speak('Golden raid joy! ' + winnerTeam.name + ' jiteche!', true);
+    commentary('গোল্ডেন রেইড জয়! ' + winnerTeam.name + ' জিতেছে!', true);
     el('endMvp').textContent = winnerTeam.name + ' scored the sudden-death raid to clinch it.';
     sfx.matchEnd();
     burstConfetti(['#e8b23b','#006a4e','#f42a41','#ffffff'], 32);
@@ -2641,7 +2683,7 @@
     if(tScore>aScore) winner = state.teams.tigers.name + ' win the match! 🏆';
     else winner = state.teams.panthers.name + ' win the match! 🏆';
     el('endWinner').textContent = winner;
-    speak('Khela sesh! ' + winner, true);
+    commentary('খেলা শেষ! ' + winner, true);
     const tigerRaidShare = state.teams.tigers.score.raid + state.teams.tigers.score.bonus;
     const pantherRaidShare = state.teams.panthers.score.raid + state.teams.panthers.score.bonus;
     const mvpTeam = tigerRaidShare >= pantherRaidShare ? state.teams.tigers.name : state.teams.panthers.name;
@@ -2675,7 +2717,7 @@
     raidTitleForTurn();
     const modeText = state.mode === '2p' ? '👥 LOCAL MULTIPLAYER (P1 vs P2, pass & play). ' : '🤖 SOLO vs AI. ';
     log('🏟️ ' + finalA + ' vs ' + finalB + ' — match begins! ' + modeText + finalA + ' raid first.', true);
-    speak(finalA + ' bonam ' + finalB + '. Khela shuru!', true);
+    commentary('খেলা শুরু! ' + finalA + ' বনাম ' + finalB + '!', true);
     if(state.mode === '2p') log('📱 P1 device niye raid koro, then P2 ke dao. Keyboard: 1-4 = move.', false);
   }
 
