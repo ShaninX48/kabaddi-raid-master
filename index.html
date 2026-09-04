@@ -743,7 +743,7 @@
         <button id="stepNextBtn" type="button">Next →</button>
       </div>
       <button id="startMatchBtn" class="hidden">🚩 Start Match</button>
-      <div style="font-size:0.62rem; color:var(--ink-soft); opacity:0.7; margin-top:8px;">ver 13 • mathe namar feel</div>
+      <div style="font-size:0.62rem; color:var(--ink-soft); opacity:0.7; margin-top:8px;">ver 14 • P2 camera fix</div>
     </div>
   </div>
 
@@ -2475,13 +2475,15 @@
       raiderMesh3d.rotation.y = Math.atan2(dx, dz);
     }
     const px = raiderMesh3d.position.x, pz = raiderMesh3d.position.z;
-    // follow-cam: raider er kandher pichu theke (first-person feel)
+    // follow-cam: raider er kandher pichu theke (arena-r ভেতর clamp — stand e dhukbe na)
     (function(){
       const back = rk === 'tigers' ? 1 : -1;
       const k = 1 - Math.exp(-dt*4.5);
-      camera3d.position.x += (px*0.55 - camera3d.position.x)*k;
-      camera3d.position.y += (3.1 - camera3d.position.y)*k;
-      camera3d.position.z += ((pz + back*4.8) - camera3d.position.z)*k;
+      const cx = Math.max(-6, Math.min(6, px*0.55));
+      const cz = Math.max(-7.5, Math.min(7.5, pz + back*4.2));
+      camera3d.position.x += (cx - camera3d.position.x)*k;
+      camera3d.position.y += (3.6 - camera3d.position.y)*k;
+      camera3d.position.z += (cz - camera3d.position.z)*k;
       camera3d.lookAt(px*0.85, 1.0, pz - back*2.6);
     })();
     if(diveBtn && performance.now() > RT.diveCD && diveBtn.textContent !== '🤸 DIVE (F)'){
