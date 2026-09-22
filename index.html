@@ -10,7 +10,7 @@
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="./icon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Roboto+Slab:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Roboto+Slab:wght@400;500;700&family=Space+Mono:wght@400;700&family=Orbitron:wght@600;700;800;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --mud: #ab7649;
@@ -695,6 +695,199 @@
     0%,100%{ box-shadow: 0 6px 0 var(--paper-dark), 0 10px 18px rgba(0,0,0,0.25); }
     50%{ box-shadow: 0 6px 0 var(--paper-dark), 0 0 0 5px rgba(232,178,59,0.6), 0 10px 18px rgba(0,0,0,0.25); }
   }
+
+  /* ============ GAMER ARENA THEME (visual-only override) ============ */
+  :root{
+    --neon-cyan:#00e5ff; --neon-violet:#7c4dff; --neon-green:#00ff9d;
+    --neon-gold:#ffc400; --neon-pink:#ff2d55; --hud-bg:#0b1628; --hud-bg2:#13253f;
+  }
+  body{
+    background:
+      radial-gradient(1200px 600px at 50% -10%, #1e3a5f 0%, transparent 60%),
+      radial-gradient(900px 500px at 90% 110%, #3b1d5a 0%, transparent 55%),
+      linear-gradient(180deg, #060d1a 0%, #0b1e33 55%, #0a1526 100%);
+    font-family:'Rajdhani','Roboto Slab',sans-serif;
+    position:relative;
+  }
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background: repeating-linear-gradient(0deg, rgba(255,255,255,0.035) 0 1px, transparent 1px 3px);
+    mix-blend-mode:overlay;
+  }
+  body::after{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background:
+      linear-gradient(90deg, rgba(0,229,255,0.07) 1px, transparent 1px),
+      linear-gradient(rgba(0,229,255,0.07) 1px, transparent 1px);
+    background-size:44px 44px;
+    mask-image: radial-gradient(ellipse at 50% 30%, black 30%, transparent 75%);
+    opacity:0.5;
+  }
+  .ticket, .field, .raid-panel{ position:relative; z-index:1; }
+  h1,h2,h3{ font-family:'Orbitron','Anton',sans-serif; }
+
+  /* HUD scoreboard */
+  .ticket{
+    background: linear-gradient(180deg, var(--hud-bg2) 0%, var(--hud-bg) 100%);
+    border:1px solid rgba(0,229,255,0.35);
+    border-bottom:2px solid rgba(0,229,255,0.5);
+    box-shadow: 0 0 24px rgba(0,229,255,0.25), 0 0 60px rgba(124,77,255,0.18), inset 0 1px 0 rgba(255,255,255,0.12), 0 10px 24px rgba(0,0,0,0.5);
+    border-radius:14px; color:#fff; overflow:hidden;
+  }
+  .ticket::before, .ticket::after{ display:none; }
+  .ticket::after{
+    display:block; left:0; right:0; top:auto; bottom:0; width:100%; height:3px; transform:none; border-radius:0;
+    background: linear-gradient(90deg, var(--neon-green), var(--neon-cyan), var(--neon-violet), var(--neon-pink), var(--neon-gold));
+    background-size:300% 100%; animation: hudFlow 6s linear infinite; opacity:1;
+    box-shadow:0 0 12px rgba(0,229,255,0.8);
+  }
+  @keyframes hudFlow{ 0%{background-position:0% 0;} 100%{background-position:300% 0;} }
+  .team-block .name{ font-family:'Orbitron',sans-serif; font-weight:800; font-size:1rem; letter-spacing:1px; color:#fff !important; text-shadow:0 0 10px rgba(0,229,255,0.6); text-transform:uppercase; }
+  .team-block.tigers .name{ color:var(--neon-green) !important; text-shadow:0 0 12px rgba(0,255,157,0.8); }
+  .team-block.panthers .name{ color:var(--neon-gold) !important; text-shadow:0 0 12px rgba(255,196,0,0.8); }
+  .team-block .sub{ color:#8fb3d9; font-family:'Rajdhani'; font-weight:700; letter-spacing:2px; }
+  .team-block{ border-top:none !important; }
+  .score-mid{ background:rgba(0,0,0,0.45); border:1px solid rgba(0,229,255,0.3); border-radius:10px; padding:4px 14px; box-shadow:inset 0 0 18px rgba(0,0,0,0.7), 0 0 14px rgba(0,229,255,0.25); }
+  .score-digits{ font-family:'Orbitron',monospace !important; font-weight:900; color:#fff; text-shadow:0 0 12px var(--neon-cyan), 0 0 32px rgba(124,77,255,0.9); letter-spacing:3px; }
+  .half-label{ color:var(--neon-cyan); font-family:'Rajdhani'; font-weight:700; letter-spacing:2px; }
+  .mute-btn,.restart-btn,.info-btn,.install-btn,.menu-btn,.comm-btn,.sub-btn{
+    background:rgba(0,229,255,0.1) !important; border:1px solid rgba(0,229,255,0.35) !important; color:#cfffff !important;
+    backdrop-filter:blur(4px); transition:all 0.15s;
+  }
+  .mute-btn:hover,.restart-btn:hover,.info-btn:hover,.install-btn:hover,.menu-btn:hover,.comm-btn:hover,.sub-btn:hover{
+    background:rgba(0,229,255,0.25) !important; box-shadow:0 0 12px rgba(0,229,255,0.6); transform:translateY(-1px);
+  }
+
+  /* Arena field */
+  .field{
+    background: linear-gradient(180deg, rgba(19,37,63,0.9), rgba(11,22,40,0.9));
+    border:1px solid rgba(0,229,255,0.25); border-radius:18px;
+    box-shadow: 0 0 30px rgba(0,229,255,0.15), 0 0 70px rgba(124,77,255,0.15), 0 12px 28px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+    backdrop-filter:blur(8px);
+  }
+  .field::before{ content:"⚡"; filter:drop-shadow(0 0 8px var(--neon-cyan)); }
+  .field::after{ content:"🏟️"; filter:drop-shadow(0 0 8px var(--neon-gold)); }
+  .court{
+    box-shadow:0 0 0 2px rgba(0,229,255,0.4), 0 0 34px rgba(0,229,255,0.25), 0 0 70px rgba(124,77,255,0.2), inset 0 0 30px rgba(0,0,0,0.4);
+    border-radius:14px;
+  }
+  .mid-line{ background:var(--neon-cyan); height:3px; box-shadow:0 0 10px var(--neon-cyan), 0 0 24px rgba(0,229,255,0.7); opacity:1; }
+  .bonus-line{ background:repeating-linear-gradient(90deg, var(--neon-gold) 0 10px, transparent 10px 18px); box-shadow:0 0 8px rgba(255,196,0,0.7); opacity:1; }
+  .token{ border-color:#fff; box-shadow:0 0 12px currentColor, 0 2px 6px rgba(0,0,0,0.5); font-family:'Orbitron'; font-size:0.6rem; }
+  .token.tigers{ background:linear-gradient(180deg,#00b57e,#006a4e); box-shadow:0 0 14px rgba(0,255,157,0.8); }
+  .token.panthers{ background:linear-gradient(180deg,#3a4a75,#24304d); box-shadow:0 0 14px rgba(255,196,0,0.7); }
+  .raider-token{ box-shadow:0 0 18px var(--neon-pink), 0 0 34px rgba(255,45,85,0.5); border-color:#fff; font-family:'Orbitron'; }
+  .bench{ background:rgba(0,229,255,0.08); border:1px solid rgba(0,229,255,0.18); backdrop-filter:blur(4px); }
+  .bench .label{ color:#8fb3d9; font-family:'Rajdhani'; font-weight:700; letter-spacing:2px; }
+
+  /* Glass raid panel + gamer cards */
+  .raid-panel{
+    background:linear-gradient(180deg, rgba(19,37,63,0.92), rgba(8,16,30,0.94));
+    border:1px solid rgba(0,229,255,0.28); border-radius:16px; color:#eaf6ff;
+    box-shadow:0 0 26px rgba(0,229,255,0.18), 0 12px 28px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.12);
+    backdrop-filter:blur(14px);
+  }
+  .raid-header h3{ color:var(--neon-cyan); letter-spacing:2px; font-size:0.85rem; text-shadow:0 0 10px rgba(0,229,255,0.7); text-transform:uppercase; }
+  .turn-badge{ font-family:'Orbitron'; background:linear-gradient(90deg,var(--neon-cyan),var(--neon-violet)); box-shadow:0 0 10px rgba(0,229,255,0.6); border:none; }
+  .breath-wrap,.pressure-wrap,.mini-breath-wrap,.mic-level-wrap{ background:rgba(0,0,0,0.55); border:1px solid rgba(0,229,255,0.2); box-shadow:inset 0 0 10px rgba(0,0,0,0.8); }
+  .breath-bar,.mini-breath-bar{
+    background:linear-gradient(90deg,var(--neon-green),var(--neon-cyan),var(--neon-violet)) !important;
+    background-size:200% 100% !important; animation:neonFlow 1.2s linear infinite;
+    box-shadow:0 0 14px rgba(0,229,255,0.8);
+  }
+  .pressure-bar{ background:linear-gradient(90deg,var(--neon-gold),var(--neon-pink)) !important; box-shadow:0 0 12px rgba(255,45,85,0.8); }
+  @keyframes neonFlow{ 0%{background-position:0% 0;} 100%{background-position:200% 0;} }
+
+  .move-btn{
+    background:linear-gradient(180deg,#16283f,#0c1729) !important; border:1px solid rgba(0,229,255,0.22) !important;
+    border-left:4px solid var(--neon-cyan) !important; border-radius:12px; color:#eaf6ff;
+    font-family:'Rajdhani' !important; box-shadow:0 4px 14px rgba(0,0,0,0.4);
+    transition:transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+  }
+  .move-btn:nth-child(2){ border-left-color:var(--neon-green) !important; }
+  .move-btn:nth-child(3){ border-left-color:var(--neon-violet) !important; }
+  .move-btn:nth-child(4){ border-left-color:var(--neon-gold) !important; }
+  .move-btn:hover:not(:disabled){ transform:translateY(-3px) scale(1.01); border-color:var(--neon-cyan) !important; box-shadow:0 0 20px rgba(0,229,255,0.45), 0 8px 18px rgba(0,0,0,0.5); }
+  .move-btn:disabled{ opacity:0.4; }
+  .move-btn .m-name{ font-family:'Orbitron'; font-size:0.82rem; letter-spacing:1px; color:#fff; text-transform:uppercase; }
+  .move-btn .m-desc{ color:#9db9d5; font-weight:600; }
+  .move-btn .m-odds{ color:var(--neon-cyan); font-family:'Orbitron'; font-size:0.65rem; }
+  .m-bar{ background:rgba(255,255,255,0.12); }
+  .m-fill{ background:linear-gradient(90deg,var(--neon-cyan),var(--neon-violet)) !important; box-shadow:0 0 10px rgba(0,229,255,0.8); }
+  .m-fill.low{ background:linear-gradient(90deg,var(--neon-gold),var(--neon-pink)) !important; }
+
+  .next-btn{
+    background:linear-gradient(180deg,#00c8e0,#007a94) !important; font-family:'Orbitron' !important;
+    letter-spacing:2px; text-transform:uppercase; border:1px solid rgba(255,255,255,0.25);
+    box-shadow:0 4px 0 #04414f, 0 0 22px rgba(0,229,255,0.55); transition:all 0.15s;
+  }
+  .next-btn:hover{ filter:brightness(1.15); box-shadow:0 4px 0 #04414f, 0 0 32px rgba(0,229,255,0.85); transform:translateY(-1px); }
+  .next-btn:active{ transform:translateY(3px); box-shadow:0 0 10px rgba(0,229,255,0.5); }
+
+  /* God-tier action buttons */
+  .tag-btn,.chant-btn{
+    background:linear-gradient(180deg,#ff4d6a,#a3122a) !important; font-family:'Orbitron' !important;
+    letter-spacing:2px; text-transform:uppercase; border:1px solid rgba(255,255,255,0.3) !important;
+    box-shadow:0 4px 0 #5a0a16, 0 0 24px rgba(255,45,85,0.6) !important; transition:all 0.15s;
+    animation:btnPulse 1.6s ease-in-out infinite;
+  }
+  @keyframes btnPulse{ 0%,100%{box-shadow:0 4px 0 #5a0a16, 0 0 16px rgba(255,45,85,0.5);} 50%{box-shadow:0 4px 0 #5a0a16, 0 0 32px rgba(255,45,85,0.9);} }
+  .tag-btn:hover,.chant-btn:hover{ filter:brightness(1.15); }
+  .tag-btn:active,.chant-btn:active{ transform:translateY(3px); box-shadow:0 0 12px rgba(255,45,85,0.7) !important; }
+  .sprint-btn,.dive-btn,.mic-toggle{
+    background:rgba(0,229,255,0.08) !important; border:1px solid var(--neon-cyan) !important; color:var(--neon-cyan) !important;
+    font-family:'Orbitron' !important; letter-spacing:1px; box-shadow:0 0 12px rgba(0,229,255,0.25), inset 0 0 12px rgba(0,229,255,0.08);
+  }
+  .sprint-btn.held,.mic-toggle.active{ background:rgba(0,229,255,0.28) !important; color:#fff !important; box-shadow:0 0 22px rgba(0,229,255,0.7); }
+  .chant-text{ font-family:'Orbitron' !important; color:var(--neon-pink) !important; text-shadow:0 0 14px rgba(255,45,85,0.8); letter-spacing:2px; }
+  .chant-challenge:not(.hidden){ background:linear-gradient(180deg,#13253f,#080f1e) !important; border:1px solid rgba(0,229,255,0.35) !important; box-shadow:0 0 28px rgba(0,229,255,0.35), 0 14px 34px rgba(0,0,0,0.6) !important; }
+  .chant-hint,.mic-status{ color:#8fb3d9 !important; font-family:'Rajdhani' !important; font-weight:700; letter-spacing:1px; }
+  .mic-level-bar{ background:linear-gradient(90deg,var(--neon-green),var(--neon-cyan)) !important; box-shadow:0 0 10px rgba(0,229,255,0.8); }
+
+  /* Modals glass + neon */
+  .modal-overlay{ background:rgba(3,8,18,0.72); backdrop-filter:blur(8px); }
+  .modal{
+    background:linear-gradient(180deg,#14273f,#080f1e) !important; color:#eaf6ff;
+    border:1px solid rgba(0,229,255,0.35); box-shadow:0 0 40px rgba(0,229,255,0.3), 0 20px 50px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.15);
+    animation:popIn 0.32s cubic-bezier(0.2,1.4,0.4,1);
+  }
+  @keyframes popIn{ from{opacity:0; transform:scale(0.92) translateY(10px);} to{opacity:1; transform:none;} }
+  .modal h2{ color:#fff; text-shadow:0 0 16px rgba(0,229,255,0.8); letter-spacing:1px; }
+  .modal p{ color:#9db9d5; font-family:'Rajdhani'; font-weight:600; }
+  .modal button{ font-family:'Orbitron' !important; letter-spacing:1px; background:linear-gradient(180deg,#00c8e0,#007a94) !important; box-shadow:0 4px 0 #04414f, 0 0 18px rgba(0,229,255,0.5); border:1px solid rgba(255,255,255,0.2); }
+  .modal button:hover{ filter:brightness(1.15); box-shadow:0 4px 0 #04414f, 0 0 28px rgba(0,229,255,0.8); }
+  .team-input-row input{ background:#060d1a !important; border:1px solid rgba(0,229,255,0.35) !important; color:#fff !important; font-family:'Orbitron' !important; box-shadow:inset 0 0 12px rgba(0,0,0,0.7); }
+  .team-input-row input:focus{ border-color:var(--neon-cyan) !important; box-shadow:0 0 14px rgba(0,229,255,0.6); }
+  .team-input-row .vs-label{ color:var(--neon-pink); font-family:'Orbitron'; text-shadow:0 0 10px rgba(255,45,85,0.8); }
+  .mode-btn{ background:#0a1728 !important; border:1px solid rgba(0,229,255,0.25) !important; color:#cfe8ff !important; font-family:'Rajdhani' !important; }
+  .mode-btn small{ color:#8fb3d9 !important; }
+  .mode-btn.selected{ border-color:var(--neon-cyan) !important; background:rgba(0,229,255,0.15) !important; box-shadow:0 0 16px rgba(0,229,255,0.55) !important; color:#fff !important; }
+  .step-dots .dot.active{ background:linear-gradient(90deg,var(--neon-cyan),var(--neon-violet)); box-shadow:0 0 10px rgba(0,229,255,0.6); }
+  .step-nav button{ background:#0a1728 !important; border:1px solid rgba(0,229,255,0.3) !important; color:#fff !important; }
+  .step-nav #stepNextBtn{ background:linear-gradient(180deg,#00c8e0,#007a94) !important; box-shadow:0 0 16px rgba(0,229,255,0.5); }
+  .modal .final-score{ color:#fff; text-shadow:0 0 16px var(--neon-cyan); font-family:'Orbitron' !important; }
+  .menu-drop{ background:#0d1c31 !important; border:1px solid rgba(0,229,255,0.35) !important; box-shadow:0 0 24px rgba(0,229,255,0.3); }
+  .menu-item{ color:#eaf6ff !important; }
+  .menu-item:hover{ background:rgba(0,229,255,0.15) !important; }
+  .menu-item + .menu-item{ border-top:1px solid rgba(0,229,255,0.15) !important; }
+
+  /* Log / stats / commentary HUD */
+  .log-panel{ background:#050c16 !important; border:1px solid rgba(0,229,255,0.25); color:#9fefff !important; box-shadow:inset 0 0 18px rgba(0,0,0,0.8); }
+  .log-panel::-webkit-scrollbar{ width:8px; } .log-panel::-webkit-scrollbar-thumb{ background:linear-gradient(var(--neon-cyan),var(--neon-violet)); border-radius:4px; }
+  .log-panel .tag-score{ color:var(--neon-gold); text-shadow:0 0 8px rgba(255,196,0,0.7); }
+  .stat-card{ background:linear-gradient(180deg,#13253f,#0a1628) !important; border:1px solid rgba(0,229,255,0.25); color:#eaf6ff; box-shadow:0 6px 18px rgba(0,0,0,0.5); }
+  .stat-card h4{ font-family:'Orbitron'; letter-spacing:2px; }
+  .stat-card.tigers h4{ color:var(--neon-green) !important; text-shadow:0 0 10px rgba(0,255,157,0.6); }
+  .stat-card.panthers h4{ color:var(--neon-gold) !important; text-shadow:0 0 10px rgba(255,196,0,0.6); }
+  .stat-row{ color:#cfe8ff; }
+  .comm-banner{ background:rgba(5,12,22,0.94) !important; border:1px solid var(--neon-gold) !important; border-left:4px solid var(--neon-gold) !important; box-shadow:0 0 20px rgba(255,196,0,0.4); color:#fff !important; font-family:'Rajdhani' !important; font-weight:700; }
+  .confetti-piece{ box-shadow:0 0 8px currentColor; }
+  .raid-panel.do-or-die{ border-color:var(--neon-pink) !important; animation:warningPulseNeon 0.9s ease-in-out infinite; }
+  @keyframes warningPulseNeon{ 0%,100%{box-shadow:0 0 0 rgba(255,45,85,0);} 50%{box-shadow:0 0 0 3px rgba(255,45,85,0.8), 0 0 30px rgba(255,45,85,0.6);} }
+  .ticket.golden{ animation:goldenPulseNeon 1s ease-in-out infinite; }
+  @keyframes goldenPulseNeon{ 0%,100%{box-shadow:0 0 18px rgba(255,196,0,0.2);} 50%{box-shadow:0 0 0 4px rgba(255,196,0,0.7), 0 0 40px rgba(255,196,0,0.6);} }
+  .score-digits.bump{ animation:scoreBumpNeon 0.5s ease-out; }
+  @keyframes scoreBumpNeon{ 0%{transform:scale(1);} 30%{transform:scale(1.35); color:var(--neon-cyan); text-shadow:0 0 24px var(--neon-cyan);} 100%{transform:scale(1);} }
 </style>
 </head>
 <body>
