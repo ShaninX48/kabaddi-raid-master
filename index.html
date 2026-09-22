@@ -750,6 +750,12 @@
   .score-mid{ background:rgba(0,0,0,0.45); border:1px solid rgba(0,229,255,0.3); border-radius:10px; padding:4px 14px; box-shadow:inset 0 0 18px rgba(0,0,0,0.7), 0 0 14px rgba(0,229,255,0.25); }
   .score-digits{ font-family:'Orbitron',monospace !important; font-weight:900; color:#fff; text-shadow:0 0 12px var(--neon-cyan), 0 0 32px rgba(124,77,255,0.9); letter-spacing:3px; }
   .half-label{ color:var(--neon-cyan); font-family:'Rajdhani'; font-weight:700; letter-spacing:2px; }
+  .ver-pill{
+    display:inline-block; margin-top:3px; padding:1px 8px; border-radius:20px;
+    font-family:'Orbitron'; font-size:0.58rem; font-weight:700; letter-spacing:1.5px;
+    color:var(--neon-gold); border:1px solid rgba(255,196,0,0.5); background:rgba(255,196,0,0.08);
+    box-shadow:0 0 10px rgba(255,196,0,0.35); text-transform:uppercase;
+  }
   .mute-btn,.restart-btn,.info-btn,.install-btn,.menu-btn,.comm-btn,.sub-btn{
     background:rgba(0,229,255,0.1) !important; border:1px solid rgba(0,229,255,0.35) !important; color:#cfffff !important;
     backdrop-filter:blur(4px); transition:all 0.15s;
@@ -936,7 +942,7 @@
         <button id="stepNextBtn" type="button">Next →</button>
       </div>
       <button id="startMatchBtn" class="hidden">🚩 Start Match</button>
-      <div style="font-size:0.62rem; color:var(--ink-soft); opacity:0.7; margin-top:8px;">ver 14 • P2 camera fix</div>
+      <div style="font-size:0.62rem; color:var(--ink-soft); opacity:0.7; margin-top:8px;">ver 15 • Gamer Arena UI</div>
     </div>
   </div>
 
@@ -951,6 +957,7 @@
     <div class="score-mid">
       <div class="half-label" id="halfLabel">Half 1 · Raid 1</div>
       <div class="score-digits" id="scoreDigits"><span id="scoreTigers">0</span> : <span id="scorePanthers">0</span></div>
+      <div class="ver-pill" title="Game version">v15 • ARENA</div>
     </div>
     <div class="team-block panthers">
       <div class="name" id="teamBName">Rajshahi Panthers</div>
