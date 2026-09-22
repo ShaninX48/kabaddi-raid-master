@@ -894,6 +894,28 @@
   @keyframes goldenPulseNeon{ 0%,100%{box-shadow:0 0 18px rgba(255,196,0,0.2);} 50%{box-shadow:0 0 0 4px rgba(255,196,0,0.7), 0 0 40px rgba(255,196,0,0.6);} }
   .score-digits.bump{ animation:scoreBumpNeon 0.5s ease-out; }
   @keyframes scoreBumpNeon{ 0%{transform:scale(1);} 30%{transform:scale(1.35); color:var(--neon-cyan); text-shadow:0 0 24px var(--neon-cyan);} 100%{transform:scale(1);} }
+  /* Start-screen hero — unmistakable gamer look */
+  #startOverlay .modal{
+    border:1px solid rgba(0,229,255,0.5);
+    border-top:3px solid transparent;
+    border-image:linear-gradient(90deg,var(--neon-green),var(--neon-cyan),var(--neon-violet),var(--neon-pink)) 1;
+    box-shadow:0 0 50px rgba(0,229,255,0.35), 0 24px 60px rgba(0,0,0,0.65);
+  }
+  #startOverlay .modal h2{
+    font-size:1.9rem; font-weight:900; letter-spacing:1px; line-height:1.1;
+    background:linear-gradient(90deg,#00ff9d,#00e5ff,#b388ff,#ff4d6a,#ffc400);
+    background-size:300% 100%; -webkit-background-clip:text; background-clip:text; color:transparent;
+    animation:hudFlow 5s linear infinite;
+    filter:drop-shadow(0 0 14px rgba(0,229,255,0.45));
+    text-transform:uppercase;
+  }
+  #startOverlay .modal::before{
+    content:"⚡ ESPORTS ARENA • v15"; display:inline-block;
+    font-family:'Orbitron'; font-size:0.6rem; font-weight:700; letter-spacing:2.5px;
+    color:#06121f; background:linear-gradient(90deg,var(--neon-green),var(--neon-cyan));
+    padding:4px 12px; border-radius:20px; margin-bottom:10px;
+    box-shadow:0 0 16px rgba(0,229,255,0.7);
+  }
 </style>
 </head>
 <body>
