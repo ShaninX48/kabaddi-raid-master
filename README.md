@@ -62,13 +62,6 @@ Plain HTML/CSS/JS — no build tools, no npm install. Uses:
 - **Sawda Akter**
 - **Joydev Datta**
 
-## 👥 Contributors
-
-This project was built by:
-- MD Tanveer Mahmood Shanin
-- Sawda Akter
-- Joydev Datta
-
 ## 📄 License
 
 Free to use, modify, and share.
